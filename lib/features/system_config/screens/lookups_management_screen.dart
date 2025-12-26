@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:mokaab/features/system_config/data/models/lookup_model.dart';
 import 'package:mokaab/features/system_config/data/seed_data.dart';
-
+import 'package:mokaab/features/system_config/screens/dynamic_category_builder_screen.dart';
 // --- الاستيرادات الجديدة ---
 import 'widgets/lookup_utils.dart';       // استيراد التعريفات من هنا
 import 'widgets/lookup_dialogs.dart';     // استيراد الديالوج
@@ -120,23 +120,26 @@ class _LookupsManagementScreenState extends State<LookupsManagementScreen> {
                             },
                           ),
                         ),
-                        // زر إضافة قائمة
+                       // زر تعريف قائمة جديدة (ديناميكية)
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(border: Border(top: BorderSide(color: Colors.grey.shade200))),
                           child: ElevatedButton.icon(
-                            onPressed: () => LookupDialogs.showAddNewCategoryDialog(context, (title, icon) {
-                               setState(() {
-                                 final newId = "CUST-${DateTime.now().millisecondsSinceEpoch}";
-                                 final newCategory = CategoryDescriptor(id: newId, title: title, icon: icon, isSystem: false);
-                                 displayCategories.add(newCategory);
-                                 customDataStore[newId] = [];
-                                 selectedCategory = newCategory;
-                               });
-                            }),
+                            onPressed: () {
+                              // الانتقال إلى الشاشة الديناميكية الجديدة
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const DynamicCategoryBuilderScreen()),
+                              );
+                            },
                             icon: const Icon(Icons.playlist_add),
-                            label: const Text("إنشاء قائمة جديدة"),
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey, minimumSize: const Size(double.infinity, 45)),
+                            label: const Text("تعريف قائمة جديدة"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueGrey[800], // لون أغمق لتمييزه
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(double.infinity, 45),
+                              elevation: 0,
+                            ),
                           ),
                         ),
                       ],
