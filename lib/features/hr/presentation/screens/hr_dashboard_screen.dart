@@ -7,6 +7,10 @@ import 'package:mokaab/features/hr/contracts/screens/contracts_list_screen.dart'
 import 'package:mokaab/features/hr/attendance/screens/attendance_dashboard_screen.dart'; // استيراد شاشة الدوام الجديدة
 import 'package:mokaab/features/hr/leaves/screens/leaves_management_screen.dart';
 import 'package:mokaab/features/hr/notifications/screens/send_memo_screen.dart';
+import 'package:mokaab/features/hr/payroll/screens/payroll_dashboard_screen.dart';
+import 'package:mokaab/features/hr/workflow/screens/workflow_setup_screen.dart';
+import 'package:mokaab/features/hr/workflow/screens/pending_approvals_screen.dart';
+
 
 class HrDashboardScreen extends StatelessWidget {
   const HrDashboardScreen({super.key});
@@ -74,6 +78,14 @@ class HrDashboardScreen extends StatelessWidget {
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SendMemoScreen())),
                     ),
 
+                    _buildCompactCard(
+                      context,
+                      title: "الرواتب (Payroll)",
+                      icon: Icons.monetization_on,
+                      color: Colors.green[700]!, // لون مالي
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PayrollDashboardScreen())),
+                    ),
+
                     // 2. دليل الموظفين
                     _buildCompactCard(
                       context,
@@ -92,6 +104,16 @@ _buildCompactCard(
   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContractsListScreen())), // التوجيه للقائمة
 ),
 
+// زر إعداد المسارات
+                    _buildCompactCard(
+                      context,
+                      title: "إعداد الموافقات",
+                      icon: Icons.account_tree_outlined,
+                      color: Colors.blueAccent,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WorkflowSetupScreen())),
+                    ),
+
+         
     
                     // 1. الهيكل التنظيمي
                     _buildCompactCard(

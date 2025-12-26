@@ -1,16 +1,31 @@
 // FileName: lib/features/hr/presentation/screens/employee/employee_portal_screen.dart
-// Description: بوابة الموظف (ESS) - النسخة النهائية الكاملة
-// Version: 3.0 (Final Stable)
+// Description: Employee Portal (ESS) - Activated Sub-screens (Payslip, Policies, Contact)
+// Version: 7.1
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-// استيراد الشاشات الفرعية
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_requests_screen.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/requests/request_forms.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/my_attendance_screen.dart';
 import 'package:mokaab/features/hr/notifications/screens/notifications_center_screen.dart';
-// استيراد المودل
 import 'package:mokaab/features/hr/notifications/models/notification_model.dart';
+
+// --- نموذج المهمة ---
+class EmployeeAction {
+  final String title;
+  final String description;
+  final String buttonText;
+  final VoidCallback onTap;
+  final Color color;
+
+  EmployeeAction({
+    required this.title,
+    required this.description,
+    required this.buttonText,
+    required this.onTap,
+    this.color = Colors.orange,
+  });
+}
 
 class EmployeePortalScreen extends StatefulWidget {
   const EmployeePortalScreen({super.key});
@@ -20,103 +35,127 @@ class EmployeePortalScreen extends StatefulWidget {
 }
 
 class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
-  bool _hideSalary = true; // حالة إخفاء الراتب
+  bool _hideSalary = true;
+  List<EmployeeAction> _pendingActions = [];
 
-  // بيانات وهمية للإشعارات (للعرض في الواجهة)
   final List<HrNotification> _previewNotifications = [
     HrNotification(
-      id: '101',
-      title: "تم إيداع الراتب", 
+      id: '101', title: "تم إيداع الراتب", 
       body: "تم تحويل راتب شهر يونيو إلى حسابك البنكي.", 
-      date: DateTime.now().subtract(const Duration(days: 2)), 
-      type: NotificationType.success
+      date: DateTime.now().subtract(const Duration(days: 2)), type: NotificationType.success
     ),
     HrNotification(
-      id: '102',
-      title: "تذكير: تحديث البيانات", 
+      id: '102', title: "تذكير: تحديث البيانات", 
       body: "يرجى تحديث صورة الهوية الشخصية.", 
-      date: DateTime.now().subtract(const Duration(days: 5)), 
-      type: NotificationType.alert
+      date: DateTime.now().subtract(const Duration(days: 5)), type: NotificationType.alert
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPendingActions();
+  }
+
+  void _checkPendingActions() {
+    List<EmployeeAction> actions = [];
+    bool isIdExpired = true; 
+    if (isIdExpired) {
+      actions.add(EmployeeAction(
+        title: "تحديث وثائق",
+        description: "الهوية الوطنية منتهية الصلاحية.",
+        buttonText: "تحديث",
+        color: Colors.redAccent,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentRequestScreen())),
+      ));
+    }
+    setState(() => _pendingActions = actions);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text("بوابتي (ESS)"),
-        backgroundColor: const Color(0xFF263238), // لون داكن (Dark Theme)
+        title: const Text("بوابتي (الخدمة الذاتية)"),
+        backgroundColor: Colors.indigo[900],
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_active_outlined),
-            tooltip: "الإشعارات",
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsCenterScreen()));
-            },
+            icon: const Icon(Icons.notifications_active),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsCenterScreen())),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 16),
         ],
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // 1. الترويسة الشخصية
-            _buildHeaderProfile(),
-            
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 2. ويدجت حالة الدوام
-                  _buildAttendanceStatusWidget(),
-                  const SizedBox(height: 20),
+            _buildWelcomeBanner(),
+            const SizedBox(height: 24),
 
-                  // 3. قسم النظرة العامة (رصيد + راتب)
-                  const Text("نظرة عامة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Row(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth > 900) {
+                  // Desktop Layout
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: _buildLeaveBalanceCard()),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildSalaryCard()),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // 4. الخدمات السريعة (Grid)
-                  const Text("خدمات سريعة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  _buildQuickActionsGrid(),
-
-                  const SizedBox(height: 24),
-
-                  // 5. قسم التبليغات
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("آخر التبليغات", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsCenterScreen()));
-                        },
-                        child: const Text("عرض الأرشيف"),
+                      Expanded(
+                        flex: 4,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (_pendingActions.isNotEmpty) ...[
+                              _buildActionRequiredSection(),
+                              const SizedBox(height: 24),
+                            ],
+                            _buildAttendanceCard(),
+                            const SizedBox(height: 24),
+                            _buildSummarySection(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        flex: 6,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("الخدمات الإلكترونية", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                            const SizedBox(height: 16),
+                            _buildQuickActionsGrid(isWide: true),
+                            const SizedBox(height: 32),
+                            _buildNotificationsSection(),
+                          ],
+                        ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildNotificationsList(),
-
-                  const SizedBox(height: 20),
-                  
-                  // 6. الإجراءات المطلوبة
-                  _buildActionRequiredSection(),
-                ],
-              ),
+                  );
+                } else {
+                  // Mobile Layout
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_pendingActions.isNotEmpty) ...[
+                        _buildActionRequiredSection(),
+                        const SizedBox(height: 24),
+                      ],
+                      _buildAttendanceCard(),
+                      const SizedBox(height: 24),
+                      _buildSummarySection(),
+                      const SizedBox(height: 24),
+                      const Text("الخدمات الإلكترونية", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                      const SizedBox(height: 16),
+                      _buildQuickActionsGrid(isWide: false),
+                      const SizedBox(height: 32),
+                      _buildNotificationsSection(),
+                    ],
+                  );
+                }
+              },
             ),
           ],
         ),
@@ -124,35 +163,89 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
     );
   }
 
-  // --- Widgets البناء ---
+  // --- Widgets ---
 
-  Widget _buildHeaderProfile() {
+  Widget _buildWelcomeBanner() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
-      decoration: const BoxDecoration(
-        color: Color(0xFF263238),
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
       ),
       child: Row(
         children: [
-          Stack(
+          CircleAvatar(
+            radius: 35,
+            backgroundColor: Colors.indigo[50],
+            child: Icon(Icons.person, size: 40, color: Colors.indigo[800]),
+          ),
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CircleAvatar(radius: 32, backgroundColor: Colors.white, child: Icon(Icons.person, size: 40, color: Colors.grey)),
-              Positioned(
-                bottom: 0, right: 0,
+              const Text("مرحباً، أحمد عبد الله", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.work_outline, size: 16, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  const Text("مشغل CNC | إدارة الإنتاج", style: TextStyle(color: Colors.grey)),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(4)),
+                    child: Text("نشط", style: TextStyle(color: Colors.green[800], fontSize: 11, fontWeight: FontWeight.bold)),
+                  )
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAttendanceCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.indigo[700]!, Colors.indigo[500]!]),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("حالة الدوام اليوم", style: TextStyle(color: Colors.white70, fontSize: 14)),
+              InkWell(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAttendanceScreen())),
                 child: Container(
-                  width: 16, height: 16,
-                  decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
+                  child: const Text("سجل الحضور", style: TextStyle(color: Colors.white, fontSize: 11)),
                 ),
               )
             ],
           ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 12),
+          const Row(
             children: [
-              const Text("مرحباً، أحمد", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              Text("مشغل CNC | الإدارة الهندسية", style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+              Icon(Icons.check_circle, color: Colors.greenAccent, size: 28),
+              SizedBox(width: 12),
+              Text("حاضر (On Duty)", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Row(
+            children: [
+              Icon(Icons.login, color: Colors.white70, size: 16),
+              SizedBox(width: 8),
+              Text("وقت الدخول: 07:55 ص", style: TextStyle(color: Colors.white70)),
             ],
           ),
         ],
@@ -160,225 +253,202 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
     );
   }
 
-  Widget _buildAttendanceStatusWidget() {
-    return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAttendanceScreen())),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("حالة اليوم", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                const SizedBox(height: 4),
-                const Text("حاضر (On Duty)", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                // (تم إزالة const لتجنب الخطأ)
-                Row(
-                  children: const [
-                    Icon(Icons.login, color: Colors.greenAccent, size: 14),
-                    SizedBox(width: 4),
-                    Text("دخول: 07:55 ص", style: TextStyle(color: Colors.white, fontSize: 12)),
-                  ],
-                )
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-              child: const Text("سجل الدوام", style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold, fontSize: 12)),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLeaveBalanceCard() {
-    return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveRequestScreen())),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5)]),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Icon(Icons.beach_access, color: Colors.orange, size: 20),
-                Text("9 أيام", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[800], fontSize: 16)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text("رصيد الإجازات", style: TextStyle(color: Colors.grey, fontSize: 12)),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(value: 0.65, backgroundColor: Colors.orange[50], color: Colors.orange, minHeight: 6, borderRadius: BorderRadius.circular(3)),
-            const SizedBox(height: 4),
-            const Text("متبقي من 14 يوم", style: TextStyle(fontSize: 10, color: Colors.grey)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSalaryCard() {
-    return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPayslipScreen())),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5)]),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Icon(Icons.account_balance_wallet, color: Colors.green, size: 20),
-                InkWell(
-                  onTap: () => setState(() => _hideSalary = !_hideSalary),
-                  child: Icon(_hideSalary ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 18),
-                )
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text("آخر راتب (يونيو)", style: TextStyle(color: Colors.grey, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(
-              _hideSalary ? "**** د.أ" : "450.00 د.أ", 
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)
-            ),
-            const SizedBox(height: 4),
-            Text("تم الإيداع 25/06", style: TextStyle(fontSize: 10, color: Colors.green[700])),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionsGrid() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        int crossAxisCount = 4;
-        if (constraints.maxWidth > 800) crossAxisCount = 6;
-        if (constraints.maxWidth < 400) crossAxisCount = 3;
-
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: 0.85,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          children: [
-            _buildIconAction(Icons.assignment_add, "طلب إجازة", Colors.purple, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveRequestScreen()))),
-            _buildIconAction(Icons.timer, "مغادرة", Colors.orange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HourlyPermissionScreen()))),
-            _buildIconAction(Icons.description, "وثيقة", Colors.blue, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentRequestScreen()))),
-            _buildIconAction(Icons.history, "طلباتي", Colors.teal, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeeRequestsScreen()))),
-            _buildIconAction(Icons.receipt_long, "قسائم", Colors.green, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPayslipScreen()))),
-            _buildIconAction(Icons.fingerprint, "سجل الدوام", Colors.redAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAttendanceScreen()))),
-            _buildIconAction(Icons.policy, "السياسات", Colors.grey, () {}),
-            _buildIconAction(Icons.question_answer, "تواصل", Colors.indigo, () {}),
-          ],
-        );
-      }
-    );
-  }
-
-  Widget _buildIconAction(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildSummarySection() {
     return Column(
       children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white, 
-              borderRadius: BorderRadius.circular(12), 
-              boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5)]
-            ),
-            child: Icon(icon, color: color, size: 24),
+        _buildInfoCard(
+          "رصيد الإجازات", 
+          "9 أيام", 
+          "متبقي من 14 يوم", 
+          Icons.beach_access, 
+          Colors.orange,
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveRequestScreen())),
+        ),
+        const SizedBox(height: 16),
+        _buildInfoCard(
+          "الراتب الشهري", 
+          _hideSalary ? "****" : "450 د.أ", 
+          "آخر إيداع: 25/06", 
+          Icons.monetization_on, 
+          Colors.green,
+          () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPayslipScreen())),
+          trailing: IconButton(
+            icon: Icon(_hideSalary ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+            onPressed: () => setState(() => _hideSalary = !_hideSalary),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500), textAlign: TextAlign.center, maxLines: 1),
       ],
     );
   }
 
-  Widget _buildNotificationsList() {
-    return ListView.builder(
+  Widget _buildInfoCard(String title, String value, String sub, IconData icon, Color color, VoidCallback onTap, {Widget? trailing}) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 1, 
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                    const SizedBox(height: 4),
+                    Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
+                    Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- 4. شبكة الخدمات (تفعيل الأزرار المطلوبة) ---
+  Widget _buildQuickActionsGrid({required bool isWide}) {
+    final services = [
+      {'icon': Icons.add_box, 'label': 'طلب إجازة', 'color': Colors.purple, 'page': const LeaveRequestScreen()},
+      {'icon': Icons.timer, 'label': 'مغادرة', 'color': Colors.orange, 'page': const HourlyPermissionScreen()},
+      {'icon': Icons.description, 'label': 'وثيقة', 'color': Colors.blue, 'page': const DocumentRequestScreen()},
+      {'icon': Icons.assignment, 'label': 'طلباتي', 'color': Colors.teal, 'page': const EmployeeRequestsScreen()},
+      
+      // --- تفعيل الروابط هنا ---
+      {'icon': Icons.receipt_long, 'label': 'قسائم', 'color': Colors.green, 'page': const MyPayslipScreen()},
+      {'icon': Icons.fingerprint, 'label': 'سجل الدوام', 'color': Colors.redAccent, 'page': const MyAttendanceScreen()},
+      {'icon': Icons.policy, 'label': 'السياسات', 'color': Colors.blueGrey, 'page': const CompanyPoliciesScreen()},
+      {'icon': Icons.headset_mic, 'label': 'تواصل', 'color': Colors.indigo, 'page': const ContactHrScreen()},
+    ];
+
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _previewNotifications.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isWide ? 4 : 3, 
+        childAspectRatio: 1.1,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: services.length,
       itemBuilder: (context, index) {
-        final notif = _previewNotifications[index];
-        Color iconColor = Colors.blue;
-        IconData icon = Icons.info;
-
-        if (notif.type == NotificationType.success) { iconColor = Colors.green; icon = Icons.check_circle; }
-        if (notif.type == NotificationType.alert) { iconColor = Colors.orange; icon = Icons.warning; }
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          elevation: 0,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: Colors.grey.shade200)),
-          child: ListTile(
-            leading: Icon(icon, color: iconColor),
-            title: Text(notif.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(notif.body, style: const TextStyle(fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4),
-                Text(DateFormat('yyyy/MM/dd HH:mm').format(notif.date), style: TextStyle(fontSize: 10, color: Colors.grey[500])),
-              ],
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
-            onTap: () {
-               Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsCenterScreen()));
-            },
-          ),
-        );
+        final item = services[index];
+        return _buildServiceCard(item);
       },
     );
   }
 
+  Widget _buildServiceCard(Map<String, dynamic> item) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 1, 
+      child: InkWell(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => item['page'])),
+        borderRadius: BorderRadius.circular(12),
+        hoverColor: (item['color'] as Color).withOpacity(0.05),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: (item['color'] as Color).withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(item['icon'], color: item['color'], size: 32),
+            ),
+            const SizedBox(height: 12),
+            Text(item['label'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationsSection() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text("آخر التبليغات", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsCenterScreen())),
+              child: const Text("عرض الكل"),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _previewNotifications.length,
+          itemBuilder: (ctx, idx) {
+            final notif = _previewNotifications[idx];
+            return Card(
+              elevation: 0, 
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: Colors.grey.shade200)),
+              child: ListTile(
+                leading: Icon(notif.icon, color: notif.color),
+                title: Text(notif.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: Text(notif.body, style: const TextStyle(fontSize: 12)),
+                trailing: Text(DateFormat('d MMM').format(notif.date), style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildActionRequiredSection() {
+    final action = _pendingActions.first;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.amber[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.shade200)),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade100),
+      ),
       child: Row(
         children: [
-          const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 30),
-          const SizedBox(width: 12),
+          const Icon(Icons.warning, color: Colors.redAccent, size: 30),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              // (تم إزالة const لتجنب الخطأ)
-              children: const [
-                Text("إجراء مطلوب", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-                Text("يرجى تحديث صورة الهوية الشخصية قبل 20/12 لتجنب وقف الراتب.", style: TextStyle(fontSize: 12, color: Colors.black54)),
+              children: [
+                Text(action.title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                Text(action.description, style: const TextStyle(fontSize: 12, color: Colors.black54)),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.amber),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: action.onTap,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white, foregroundColor: Colors.red),
+            child: Text(action.buttonText),
+          ),
         ],
       ),
     );
   }
 }
 
-// --- شاشة فرعية: قسيمة الراتب (Payslip) ---
+// --- 5. الشاشات المفعلة (Active Screens) ---
+
+// 1. شاشة قسائم الراتب
 class MyPayslipScreen extends StatelessWidget {
   const MyPayslipScreen({super.key});
 
@@ -386,47 +456,119 @@ class MyPayslipScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        title: const Text("قسائم الراتب"),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("قسائم الراتب"), backgroundColor: Colors.green),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: 3, // عدد وهمي للتجربة
+        itemCount: 4,
         itemBuilder: (context, index) {
-          // بيانات وهمية
           final month = DateTime.now().subtract(Duration(days: 30 * index));
-          final monthName = DateFormat('MMMM yyyy', 'ar').format(month);
-          
           return Card(
             elevation: 2,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
-              contentPadding: const EdgeInsets.all(12),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.green[50], shape: BoxShape.circle),
-                child: const Icon(Icons.attach_money, color: Colors.green),
-              ),
-              title: Text("راتب شهر $monthName", style: const TextStyle(fontWeight: FontWeight.bold)),
+              leading: const CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.attach_money, color: Colors.white)),
+              title: Text("راتب شهر ${DateFormat('MMMM yyyy', 'ar').format(month)}"),
               subtitle: const Text("الصافي: 450.00 د.أ"),
-              trailing: IconButton(
-                icon: const Icon(Icons.download_rounded, color: Colors.grey),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("جاري تحميل قسيمة الراتب PDF..."))
-                  );
-                },
-              ),
-              onTap: () {
-                // هنا يمكن فتح تفاصيل القسيمة
-              },
+              trailing: IconButton(icon: const Icon(Icons.download), onPressed: () {}),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+// 2. شاشة السياسات
+class CompanyPoliciesScreen extends StatelessWidget {
+  const CompanyPoliciesScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(title: const Text("السياسات واللوائح"), backgroundColor: Colors.blueGrey),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [
+          PolicyCard(title: "لائحة العمل الداخلية", date: "2024/01/01"),
+          PolicyCard(title: "سياسة الإجازات", date: "2023/05/15"),
+          PolicyCard(title: "مدونة السلوك المهني", date: "2023/01/01"),
+          PolicyCard(title: "دليل الأمن والسلامة", date: "2024/02/10"),
+        ],
+      ),
+    );
+  }
+}
+
+class PolicyCard extends StatelessWidget {
+  final String title;
+  final String date;
+  const PolicyCard({super.key, required this.title, required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        leading: const Icon(Icons.article, color: Colors.blueGrey, size: 30),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Text("تاريخ الإصدار: $date"),
+        trailing: const Icon(Icons.picture_as_pdf, color: Colors.red),
+      ),
+    );
+  }
+}
+
+// 3. شاشة التواصل
+class ContactHrScreen extends StatelessWidget {
+  const ContactHrScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
+      appBar: AppBar(title: const Text("تواصل معنا"), backgroundColor: Colors.indigo),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Card(
+              child: ListTile(
+                leading: Icon(Icons.email, color: Colors.indigo),
+                title: Text("مراسلة الموارد البشرية"),
+                subtitle: Text("hr@mokaab.com"),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Card(
+              child: ListTile(
+                leading: Icon(Icons.phone, color: Colors.indigo),
+                title: Text("الدعم الفني"),
+                subtitle: Text("support@mokaab.com"),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Card(
+              child: ListTile(
+                leading: Icon(Icons.chat, color: Colors.green),
+                title: Text("واتساب مباشر"),
+                subtitle: Text("+962 79 000 0000"),
+              ),
+            ),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: (){}, 
+                icon: const Icon(Icons.message), 
+                label: const Text("بدء محادثة فورية"),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
