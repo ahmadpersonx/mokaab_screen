@@ -1,15 +1,17 @@
 // FileName: lib/features/hr/contracts/screens/contract_management_screen.dart
-// Description: شاشة إنشاء وإدارة عقود التعيين (The Core Linker)
-// Version: 1.5 (Removed faulty setter)
+// Description: شاشة إنشاء العقود (Strict Workflow: File First)
+// Version: 2.0 (Enforced Employee Selection)
 
 import 'package:flutter/material.dart';
 import 'package:mokaab/features/system_config/data/models/lookup_model.dart';
 import 'package:mokaab/features/system_config/data/seed_data.dart';
 import 'package:mokaab/features/hr/contracts/services/contract_pdf_service.dart';
+import 'package:mokaab/features/hr/presentation/screens/employee/quick_add_employee_screen.dart'; // للربط السريع
 
 // نموذج مبسط للعقد
 class EmploymentContract {
   String? employeeName;
+  String? employeeId; // إضافة ID الموظف للربط
   String? contractType;
   DateTime? startDate;
   DateTime? endDate;
@@ -18,7 +20,7 @@ class EmploymentContract {
   String? jobTitleId;
   String? jobLevelId;
   double basicSalary;
-  Map<String, double> allowances; // الخريطة الجديدة
+  Map<String, double> allowances; 
   String? shiftId;
   int probationMonths;
   int noticePeriodMonths;
@@ -26,6 +28,7 @@ class EmploymentContract {
 
   EmploymentContract({
     this.employeeName,
+    this.employeeId,
     this.contractType,
     this.startDate,
     this.endDate,
@@ -52,6 +55,14 @@ class ContractManagementScreen extends StatefulWidget {
 class _ContractManagementScreenState extends State<ContractManagementScreen> {
   final EmploymentContract _contract = EmploymentContract();
   
+  // بيانات وهمية للموظفين الذين تم فتح ملفاتهم ولكن ليس لديهم عقود بعد (Pending Contracts)
+  final List<Map<String, String>> _pendingEmployees = [
+    {'id': 'EMP-102', 'name': 'سالم علي يوسف', 'nid': '9950000000', 'job': 'مشغل آليات'},
+    {'id': 'EMP-103', 'name': 'محمود حسن', 'nid': '9960000000', 'job': 'فني صيانة'},
+    {'id': 'EMP-104', 'name': 'رنا خالد', 'nid': '9980000000', 'job': 'سكرتارية'},
+  ];
+
+  // قوائم البيانات
   List<LookupItem> get _departments => masterLookups[LookupCategory.departments] ?? [];
   List<LookupItem> get _sections => masterLookups[LookupCategory.sections] ?? [];
   List<LookupItem> get _jobTitles => masterLookups[LookupCategory.jobTitles] ?? [];
@@ -69,28 +80,29 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text("إنشاء عقد تعيين جديد"),
-        actions: [
-          TextButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم حفظ مسودة العقد بنجاح")));
-            },
-            icon: const Icon(Icons.save_as, color: Colors.white),
-            label: const Text("حفظ مسودة", style: TextStyle(color: Colors.white)),
-          )
-        ],
+        backgroundColor: const Color(0xFF00897B),
+        foregroundColor: Colors.white,
       ),
       body: Row(
         children: [
+          // القائمة الجانبية
           Container(
             width: 250,
             color: Colors.white,
             child: Stepper(
               type: StepperType.vertical,
               currentStep: _currentStep,
-              onStepTapped: (index) => setState(() => _currentStep = index),
+              onStepTapped: (index) {
+                // منع الانتقال إذا لم يتم اختيار موظف في الخطوة الأولى
+                if (index > 0 && _contract.employeeId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يجب اختيار الموظف أولاً"), backgroundColor: Colors.red));
+                  return;
+                }
+                setState(() => _currentStep = index);
+              },
               controlsBuilder: (context, details) => const SizedBox(),
               steps: const [
-                Step(title: Text("بيانات العقد الأساسية"), content: SizedBox(), isActive: true),
+                Step(title: Text("اختيار الموظف ونوع العقد"), content: SizedBox(), isActive: true),
                 Step(title: Text("الموقع والهيكل الوظيفي"), content: SizedBox()),
                 Step(title: Text("الراتب والمزايا المالية"), content: SizedBox()),
                 Step(title: Text("الدوام والإجازات"), content: SizedBox()),
@@ -99,6 +111,8 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
             ),
           ),
           const VerticalDivider(width: 1),
+          
+          // المحتوى
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(24),
@@ -119,6 +133,8 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
               ),
             ),
           ),
+          
+          // الملخص
           Container(
             width: 300,
             color: Colors.grey[50],
@@ -141,17 +157,82 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     }
   }
 
+  // --- 1. الخطوة الأولى المعدلة (إجبارية الملف) ---
   Widget _buildBasicInfoStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("تفاصيل التعاقد", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal)),
-        const SizedBox(height: 16),
-        TextFormField(
-          decoration: const InputDecoration(labelText: "اسم الموظف (المرشح)", border: OutlineInputBorder(), prefixIcon: Icon(Icons.person)),
-          onChanged: (val) => setState(() => _contract.employeeName = val),
+        const Text("1. اختيار الموظف (الملف الشخصي)", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal)),
+        const SizedBox(height: 8),
+        const Text(
+          "يجب أن يكون للموظف ملف مفتوح في النظام قبل إنشاء العقد.",
+          style: TextStyle(color: Colors.grey, fontSize: 13),
         ),
         const SizedBox(height: 16),
+        
+        // مربع اختيار الموظف
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: Colors.blue.shade200),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.05), blurRadius: 10)],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: "اختر الموظف (الذين ليس لديهم عقود سارية)",
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person_search),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                value: _contract.employeeId, // الربط بالمتغير
+                items: _pendingEmployees.map((e) => DropdownMenuItem(
+                  value: e['id'], 
+                  child: Text("${e['name']} (${e['job']})")
+                )).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    final emp = _pendingEmployees.firstWhere((e) => e['id'] == val);
+                    _contract.employeeId = emp['id'];
+                    _contract.employeeName = emp['name'];
+                    // هنا يمكن جلب المسمى الوظيفي المقترح من ملف الموظف وتعبئته تلقائياً
+                  });
+                },
+                validator: (val) => val == null ? "يجب اختيار موظف للمتابعة" : null,
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // رابط سريع لفتح ملف جديد إذا لم يجد الاسم
+              InkWell(
+                onTap: () async {
+                  // فتح شاشة الإضافة السريعة التي أنشأناها سابقاً
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) => const QuickAddEmployeeScreen()));
+                  // بعد العودة يمكن تحديث القائمة (في الوضع الحقيقي)
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم تحديث القائمة (محاكاة)")));
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: const [
+                    Icon(Icons.add_circle_outline, size: 16, color: Colors.blue),
+                    SizedBox(width: 4),
+                    Text("الموظف غير موجود؟ اضغط هنا لفتح ملف جديد", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 24),
+        const Text("2. تفاصيل العقد", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(labelText: "نوع العقد", border: OutlineInputBorder(), prefixIcon: Icon(Icons.description)),
           value: _contractTypes.any((e) => e.id == _contract.contractType) ? _contract.contractType : null,
@@ -166,9 +247,11 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
               }
             });
           },
-          validator: (value) => value == null ? 'يرجى اختيار نوع العقد' : null,
+          validator: (val) => val == null ? "مطلوب" : null,
         ),
+        
         const SizedBox(height: 16),
+        
         Row(
           children: [
             Expanded(
@@ -180,6 +263,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
                   if (date != null) setState(() => _contract.startDate = date);
                 },
                 controller: TextEditingController(text: _contract.startDate != null ? "${_contract.startDate!.toLocal()}".split(' ')[0] : ""),
+                validator: (val) => val!.isEmpty ? "مطلوب" : null,
               ),
             ),
             const SizedBox(width: 16),
@@ -200,6 +284,10 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
+  // ... باقي الخطوات (JobInfo, Financial, Attendance, Terms) تبقى كما هي تماماً ...
+  // (قم بنسخ الدوال _buildJobInfoStep, _buildFinancialStep, ... من الكود السابق، لا تغيير عليها)
+  
+  // 2. الهيكل الوظيفي (نفس السابق)
   Widget _buildJobInfoStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,6 +345,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
+  // 3. المالية (نفس السابق)
   Widget _buildFinancialStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,6 +431,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
+  // 4. الدوام (نفس السابق)
   Widget _buildAttendanceStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -364,6 +454,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
+  // 5. الشروط (نفس السابق)
   Widget _buildTermsStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,6 +489,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
+  // --- الملخص (كما هو) ---
   Widget _buildContractSummary() {
     double totalSalary = _contract.basicSalary;
     double totalAllowances = 0; 
@@ -483,7 +575,11 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         const SizedBox(width: 12),
         ElevatedButton(
           onPressed: () {
-            if (_currentStep < 4) {
+            if (_currentStep == 0) {
+              if (_formKey.currentState!.validate()) {
+                 setState(() => _currentStep++);
+              }
+            } else if (_currentStep < 4) {
               setState(() => _currentStep++);
             } else {
               _saveAndPrintContract();
