@@ -747,49 +747,57 @@ Map<LookupCategory, List<LookupItem>> masterLookups = {
     LookupItem(id: 'VIO-DOCS', name: 'تزوير مستندات رسمية', code: 'GEN-FORGE', color: Colors.black, metaData: {'penalty': 'TERMINATION', 'progressive': false, 'reset': '0', 'investigation': true}),
   ],
 
- // 21. معايير التقييم السنوي (Smart Performance Appraisal - Comprehensive Matrix)
+// 21. معايير التقييم السنوي (Smart Performance Appraisal - Comprehensive Matrix)
   LookupCategory.evaluationCriteria: [
-    // --- 1. معايير الكفاءة العامة (General Competencies - For All) ---
-    LookupItem(id: 'EVAL-ATTEND', name: 'الالتزام بالدوام والمواعيد', code: 'GEN-ATT', color: Colors.blue, metaData: {'weight': '15', 'role': 'ALL', 'kpi': 'ATTENDANCE_RATE'}),
-    LookupItem(id: 'EVAL-TEAM', name: 'التعاون والعمل بروح الفريق', code: 'GEN-TEAM', color: Colors.indigo, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'NONE'}),
-    LookupItem(id: 'EVAL-DISC', name: 'الامتثال للسياسات واللوائح', code: 'GEN-RULE', color: Colors.blueGrey, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'VIOLATION_COUNT'}),
-    LookupItem(id: 'EVAL-COMM', name: 'مهارات التواصل الفعال', code: 'GEN-COMM', color: Colors.cyan, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'NONE'}),
+    // --- 1. معايير الكفاءة العامة (General Competencies - For All Staff) ---
+    LookupItem(id: 'EVAL-ATTEND', name: 'الالتزام بالدوام والمواعيد (Punctuality)', code: 'GEN-ATT', color: Colors.blue, metaData: {'weight': '15', 'role': 'ALL', 'kpi': 'ATTENDANCE_RATE'}),
+    LookupItem(id: 'EVAL-TEAM', name: 'التعاون والعمل بروح الفريق (Teamwork)', code: 'GEN-TEAM', color: Colors.indigo, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'NONE'}),
+    LookupItem(id: 'EVAL-DISC', name: 'الامتثال للسياسات واللوائح (Discipline)', code: 'GEN-RULE', color: Colors.blueGrey, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'VIOLATION_COUNT'}),
+    LookupItem(id: 'EVAL-COMM', name: 'مهارات التواصل الفعال (Communication)', code: 'GEN-COMM', color: Colors.cyan, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'NONE'}),
+    LookupItem(id: 'EVAL-INIT', name: 'المبادرة وحل المشكلات (Initiative)', code: 'GEN-INIT', color: Colors.lightBlue, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'NONE'}),
 
     // --- 2. الإنتاج والعمليات (Production & Operations) ---
     LookupItem(id: 'EVAL-PROD-QTY', name: 'كمية الإنتاج (تحقيق التارجت)', code: 'PRD-QTY', color: Colors.green[800], metaData: {'weight': '30', 'role': 'WORKER', 'kpi': 'PRODUCTION_VOLUME'}),
     LookupItem(id: 'EVAL-PROD-QLT', name: 'جودة العمل (دقة التصنيع)', code: 'PRD-QLT', color: Colors.teal, metaData: {'weight': '25', 'role': 'WORKER', 'kpi': 'REJECT_RATE'}),
     LookupItem(id: 'EVAL-WASTE', name: 'كفاءة استخدام المواد (تقليل الهادر)', code: 'PRD-WST', color: Colors.brown, metaData: {'weight': '15', 'role': 'WORKER', 'kpi': 'WASTE_PERCENT'}),
     LookupItem(id: 'EVAL-MACH', name: 'المحافظة على الماكينات والمعدات', code: 'PRD-EQP', color: Colors.grey[700], metaData: {'weight': '15', 'role': 'WORKER', 'kpi': 'MACHINE_DOWNTIME'}),
+    LookupItem(id: 'EVAL-EFFIC', name: 'الكفاءة التشغيلية (OEE)', code: 'PRD-OEE', color: Colors.green[600], metaData: {'weight': '20', 'role': 'SUPERVISOR', 'kpi': 'OEE_SCORE'}),
 
-    // --- 3. السلامة والصحة المهنية (HSE - Critical) ---
+    // --- 3. السلامة والصحة المهنية (HSE - Critical for Factory) ---
     LookupItem(id: 'EVAL-SAFE-INC', name: 'سجل الحوادث والإصابات (Zero Accidents)', code: 'HSE-REC', color: Colors.red[900], metaData: {'weight': '25', 'role': 'WORKER', 'kpi': 'ACCIDENT_COUNT'}),
-    LookupItem(id: 'EVAL-SAFE-PPE', name: 'الالتزام بارتداء مهمات الوقاية', code: 'HSE-PPE', color: Colors.redAccent, metaData: {'weight': '15', 'role': 'ALL', 'kpi': 'SAFETY_VIOLATIONS'}),
-    
+    LookupItem(id: 'EVAL-SAFE-PPE', name: 'الالتزام بارتداء مهمات الوقاية (PPE)', code: 'HSE-PPE', color: Colors.redAccent, metaData: {'weight': '15', 'role': 'ALL', 'kpi': 'SAFETY_VIOLATIONS'}),
+    LookupItem(id: 'EVAL-SAFE-REP', name: 'الإبلاغ عن المخاطر (Near Miss Reporting)', code: 'HSE-REP', color: Colors.deepOrange, metaData: {'weight': '10', 'role': 'ALL', 'kpi': 'NEAR_MISS_COUNT'}),
+
     // --- 4. المبيعات والتسويق (Sales & Marketing) ---
     LookupItem(id: 'EVAL-SAL-TGT', name: 'تحقيق هدف المبيعات (Sales Target)', code: 'SAL-TGT', color: Colors.purple, metaData: {'weight': '50', 'role': 'SALES', 'kpi': 'SALES_AMOUNT'}),
     LookupItem(id: 'EVAL-CUST-SAT', name: 'رضا العملاء (Customer Satisfaction)', code: 'SAL-SAT', color: Colors.purpleAccent, metaData: {'weight': '20', 'role': 'SALES', 'kpi': 'NPS_SCORE'}),
     LookupItem(id: 'EVAL-NEW-CLT', name: 'استقطاب عملاء جدد (New Business)', code: 'SAL-NEW', color: Colors.deepPurple, metaData: {'weight': '15', 'role': 'SALES', 'kpi': 'NEW_LEADS'}),
     LookupItem(id: 'EVAL-COLL', name: 'تحصيل الذمم المالية (Collections)', code: 'SAL-COL', color: Colors.indigoAccent, metaData: {'weight': '15', 'role': 'SALES', 'kpi': 'COLLECTION_RATE'}),
+    LookupItem(id: 'EVAL-MKT-ROI', name: 'عائد الحملات التسويقية (ROI)', code: 'MKT-ROI', color: Colors.pinkAccent, metaData: {'weight': '30', 'role': 'MARKETING', 'kpi': 'MARKETING_ROI'}),
 
     // --- 5. اللوجستيات وسلاسل الإمداد (Logistics & Supply Chain) ---
     LookupItem(id: 'EVAL-DELIV', name: 'الالتزام بمواعيد التوصيل (On-Time)', code: 'LOG-TIME', color: Colors.orange[800], metaData: {'weight': '40', 'role': 'DRIVER', 'kpi': 'DELIVERY_SLA'}),
     LookupItem(id: 'EVAL-VEHICLE', name: 'نظافة وصيانة المركبة', code: 'LOG-VEH', color: Colors.orange, metaData: {'weight': '20', 'role': 'DRIVER', 'kpi': 'MAINTENANCE_COST'}),
     LookupItem(id: 'EVAL-INV-ACC', name: 'دقة جرد المخزون (Inventory Accuracy)', code: 'LOG-INV', color: Colors.brown[400], metaData: {'weight': '30', 'role': 'STOREKEEPER', 'kpi': 'STOCK_VARIANCE'}),
     LookupItem(id: 'EVAL-FUEL', name: 'كفاءة استهلاك الوقود', code: 'LOG-FUEL', color: Colors.amber[900], metaData: {'weight': '10', 'role': 'DRIVER', 'kpi': 'FUEL_CONSUMPTION'}),
+    LookupItem(id: 'EVAL-SUP-PERF', name: 'أداء الموردين (Vendor Rating)', code: 'LOG-SUP', color: Colors.brown[600], metaData: {'weight': '25', 'role': 'PURCHASING', 'kpi': 'SUPPLIER_SCORE'}),
 
     // --- 6. الجودة (Quality Control) ---
     LookupItem(id: 'EVAL-QC-ACC', name: 'دقة الفحص وكشف العيوب', code: 'QC-ACC', color: Colors.teal[800], metaData: {'weight': '40', 'role': 'QC', 'kpi': 'DEFECT_DETECTION'}),
-    LookupItem(id: 'EVAL-ISO', name: 'الامتثال لمعايير ISO', code: 'QC-ISO', color: Colors.teal[300], metaData: {'weight': '20', 'role': 'QC', 'kpi': 'AUDIT_SCORE'}),
+    LookupItem(id: 'EVAL-ISO', name: 'الامتثال لمعايير ISO والتوثيق', code: 'QC-ISO', color: Colors.teal[300], metaData: {'weight': '20', 'role': 'QC', 'kpi': 'AUDIT_SCORE'}),
+    LookupItem(id: 'EVAL-RCA', name: 'سرعة حل شكاوى الجودة (RCA)', code: 'QC-RCA', color: Colors.teal[600], metaData: {'weight': '20', 'role': 'QC_MGR', 'kpi': 'COMPLAINT_TIME'}),
 
     // --- 7. المالية والإدارة (Finance & Admin) ---
     LookupItem(id: 'EVAL-REP-ACC', name: 'دقة التقارير المالية', code: 'FIN-ACC', color: Colors.blueGrey[800], metaData: {'weight': '30', 'role': 'ADMIN', 'kpi': 'ERROR_RATE'}),
     LookupItem(id: 'EVAL-DEADLINE', name: 'الالتزام بالمواعيد النهائية (Deadlines)', code: 'FIN-TIME', color: Colors.blueGrey[600], metaData: {'weight': '20', 'role': 'ADMIN', 'kpi': 'TASK_SLA'}),
-    LookupItem(id: 'EVAL-COST', name: 'مبادرات تقليل التكاليف', code: 'FIN-COST', color: Colors.green[900], metaData: {'weight': '15', 'role': 'ADMIN', 'kpi': 'SAVINGS_AMOUNT'}),
+    LookupItem(id: 'EVAL-COST-SAV', name: 'مبادرات تقليل التكاليف', code: 'FIN-COST', color: Colors.green[900], metaData: {'weight': '15', 'role': 'ADMIN', 'kpi': 'SAVINGS_AMOUNT'}),
+    LookupItem(id: 'EVAL-COMP', name: 'الامتثال القانوني والضريبي', code: 'FIN-COMP', color: Colors.indigo, metaData: {'weight': '25', 'role': 'FIN_MGR', 'kpi': 'AUDIT_FINDINGS'}),
 
     // --- 8. القيادة والإدارة العليا (Leadership & HR) ---
     LookupItem(id: 'EVAL-LEAD', name: 'القيادة وتطوير الفريق', code: 'MGT-LEAD', color: Colors.black, metaData: {'weight': '30', 'role': 'MANAGER', 'kpi': 'TEAM_PERFORMANCE'}),
     LookupItem(id: 'EVAL-RETENT', name: 'الحفاظ على الموظفين (Retention)', code: 'HR-RET', color: Colors.pink, metaData: {'weight': '20', 'role': 'MANAGER', 'kpi': 'TURNOVER_RATE'}),
     LookupItem(id: 'EVAL-STRAT', name: 'التخطيط الاستراتيجي وتحقيق الأهداف', code: 'MGT-STR', color: Colors.black45, metaData: {'weight': '30', 'role': 'MANAGER', 'kpi': 'COMPANY_PROFIT'}),
+    LookupItem(id: 'EVAL-TRAIN', name: 'تنفيذ خطط التدريب والتطوير', code: 'HR-TRN', color: Colors.pinkAccent, metaData: {'weight': '20', 'role': 'HR', 'kpi': 'TRAINING_HOURS'}),
   ],
 
 
