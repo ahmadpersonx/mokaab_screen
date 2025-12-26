@@ -1,8 +1,12 @@
 // FileName: lib/features/hr/presentation/screens/employee/employee_portal_screen.dart
+// Description: بوابة الموظف (ESS) - Responsive Grid
+// Version: 1.1 (Resized Cards)
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mokaab/features/hr/presentation/screens/employee/employee_requests_screen.dart'; // شاشة الطلبات السابقة
-import 'package:mokaab/features/hr/presentation/screens/employee/requests/request_forms.dart'; // النماذج
+import 'package:mokaab/features/hr/presentation/screens/employee/employee_requests_screen.dart';
+import 'package:mokaab/features/hr/presentation/screens/employee/requests/request_forms.dart';
+import 'package:mokaab/features/hr/presentation/screens/employee/my_attendance_screen.dart';
 
 // نموذج التبليغ
 class HrNotification {
@@ -43,9 +47,7 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_active),
-            onPressed: () {
-              // فتح مركز التنبيهات الكامل
-            },
+            onPressed: () {},
           ),
           const SizedBox(width: 8),
         ],
@@ -60,14 +62,59 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. قسم الإجراءات السريعة
+                  // 1. قسم الإجراءات السريعة (Responsive)
                   const Text("الخدمات السريعة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  _buildQuickActionsGrid(),
+                  
+                  // استخدام LayoutBuilder للتحكم بحجم المربعات
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      // تحديد عدد الأعمدة:
+                      // شاشة كبيرة > 1200: 6 أعمدة
+                      // تابلت > 600: 4 أعمدة
+                      // موبايل < 600: 3 أعمدة (ليكونوا صغاراً)
+                      int crossAxisCount = 3; 
+                      if (constraints.maxWidth > 1200) {
+                        crossAxisCount = 6;
+                      } else if (constraints.maxWidth > 600) {
+                        crossAxisCount = 4;
+                      }
+
+                      return GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: crossAxisCount,
+                        childAspectRatio: 1.0, // نسبة 1:1 (مربع)
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        children: [
+                          _buildActionCard(Icons.assignment, "طلباتي", Colors.blue, () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeeRequestsScreen()));
+                          }),
+                          _buildActionCard(Icons.date_range, "طلب إجازة", Colors.purple, () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveRequestScreen()));
+                          }),
+                          _buildActionCard(Icons.access_time, "مغادرة", Colors.orange, () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const HourlyPermissionScreen()));
+                          }),
+                          _buildActionCard(Icons.attach_money, "قسيمة الراتب", Colors.green, () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPayslipScreen()));
+                          }),
+                        _buildActionCard(Icons.fingerprint, "سجل دوامي", Colors.redAccent, () {
+                            // الربط الجديد
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAttendanceScreen()));
+                          }),
+                          _buildActionCard(Icons.description, "'طلبات الوثائق'", Colors.teal, () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentRequestScreen()));
+                          }),
+                        ],
+                      );
+                    }
+                  ),
 
                   const SizedBox(height: 24),
 
-                  // 2. قسم التبليغات (آخر التحديثات)
+                  // 2. قسم التبليغات
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -80,7 +127,7 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
 
                   const SizedBox(height: 24),
 
-                  // 3. ملخص الرصيد (إجازات)
+                  // 3. ملخص الرصيد
                   _buildLeaveBalanceSummary(),
                 ],
               ),
@@ -126,55 +173,34 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
     );
   }
 
-  // --- شبكة الخدمات ---
-  Widget _buildQuickActionsGrid() {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      childAspectRatio: 1.1,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      children: [
-        _buildActionCard(Icons.assignment, "طلباتي", Colors.blue, () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeeRequestsScreen()));
-        }),
-        _buildActionCard(Icons.date_range, "طلب إجازة", Colors.purple, () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveRequestScreen()));
-        }),
-        _buildActionCard(Icons.access_time, "مغادرة", Colors.orange, () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const HourlyPermissionScreen()));
-        }),
-        _buildActionCard(Icons.attach_money, "قسيمة الراتب", Colors.green, () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPayslipScreen())); // شاشة جديدة
-        }),
-        _buildActionCard(Icons.fingerprint, "سجل دوامي", Colors.redAccent, () {
-          // يمكن فتح شاشة تعرض سجل الحضور الخاص بالموظف فقط
-        }),
-        _buildActionCard(Icons.description, "الوثائق", Colors.teal, () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentRequestScreen()));
-        }),
-      ],
-    );
-  }
-
+  // --- تصميم البطاقة المصغرة (نفس ستايل الشاشات الأخرى) ---
   Widget _buildActionCard(IconData icon, String label, Color color, VoidCallback onTap) {
-    return Card(
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16), // زوايا دائرية
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        hoverColor: color.withOpacity(0.05),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: color.withOpacity(0.1),
-              child: Icon(icon, color: color, size: 22),
+            // أيقونة داخل دائرة ملونة شفافة
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 28),
             ),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            Text(
+              label, 
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87), 
+              textAlign: TextAlign.center
+            ),
           ],
         ),
       ),
@@ -221,7 +247,7 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
     );
   }
 
-  // --- ملخص رصيد الإجازات المصغر ---
+  // --- ملخص رصيد الإجازات ---
   Widget _buildLeaveBalanceSummary() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -271,7 +297,7 @@ class MyPayslipScreen extends StatelessWidget {
               subtitle: const Text("الصافي: 450.00 د.أ"),
               trailing: const Icon(Icons.download),
               onTap: () {
-                // فتح تفاصيل الراتب أو تحميل PDF
+                // فتح التفاصيل
               },
             ),
           );
