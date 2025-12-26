@@ -1,24 +1,21 @@
 // FileName: lib/features/hr/data/models/employee_model.dart
-// Description: النموذج الشامل لبيانات الموظف (Master Data)
-// Version: 1.0
+// Description: النموذج الشامل لبيانات الموظف (Master Data Model)
+// Version: 1.1 (Updated for Validation)
 
-import 'package:flutter/material.dart';
-
-// حالات الموظف
 enum EmployeeStatus { active, onLeave, suspended, terminated, probation }
 
 class Employee {
   // --- 1. المعلومات الأساسية (Basic Info) ---
   final String id;
-  final String employeeCode; // مثال: EMP-2024-001
+  final String employeeCode; 
   final String fullNameAr;
   final String fullNameEn;
   final String? profilePictureUrl;
   final EmployeeStatus status;
-  final String gender; // Male/Female
+  final String gender; 
   final DateTime dateOfBirth;
-  final String nationalityId; // مربوط بقائمة الجنسيات (لو وجدت) أو نص
-  final String nationalIdNumber; // الرقم الوطني/الإقامة
+  final String nationalityId; 
+  final String nationalIdNumber; 
 
   // --- 2. معلومات الاتصال (Contact Info) ---
   final String mobileNumber;
@@ -27,23 +24,23 @@ class Employee {
   final String emergencyContactName;
   final String emergencyContactPhone;
 
-  // --- 3. معلومات العمل (Work Info - From Contract & Org Structure) ---
-  final String contractId; // ربط بالعقد
+  // --- 3. معلومات العمل (Work Info) ---
+  final String contractId; 
   final DateTime joinDate;
   final DateTime? probationEndDate;
-  final String departmentId; // مربوط بـ LookupCategory.departments
-  final String sectionId;    // مربوط بـ LookupCategory.sections
-  final String? unitId;      // مربوط بـ LookupCategory.units
-  final String jobTitleId;   // مربوط بـ LookupCategory.jobTitles
-  final String jobLevelId;   // مربوط بـ LookupCategory.jobLevels
-  final String? directManagerId; // ID للمدير المباشر
-  final String workLocationId; // مربوط بـ LookupCategory.locations
-  final String shiftId;      // مربوط بـ LookupCategory.shifts
+  final String departmentId; 
+  final String sectionId;    
+  final String? unitId;      
+  final String jobTitleId;   
+  final String jobLevelId;   
+  final String? directManagerId; 
+  final String workLocationId; 
+  final String shiftId;      
 
   // --- 4. المعلومات المالية (Financial Info) ---
   final double basicSalary;
-  final Map<String, double> allowances; // Key: AllowanceID, Value: Amount
-  final String paymentMethodId; // مربوط بـ LookupCategory.paymentMethods
+  final Map<String, double> allowances; 
+  final String paymentMethodId; 
   final String? bankName;
   final String? ibanNumber;
   final String? socialSecurityNumber;
@@ -91,7 +88,6 @@ class Employee {
     this.leaveBalances = const [],
   });
 
-  // Helper: لحساب الراتب الإجمالي
   double get totalSalary {
     double totalAllowances = allowances.values.fold(0, (sum, amount) => sum + amount);
     return basicSalary + totalAllowances;
@@ -102,10 +98,10 @@ class Employee {
 
 class EmployeeDocument {
   final String id;
-  final String documentTypeId; // مربوط بـ LookupCategory.documentTypes
+  final String documentTypeId; 
   final String documentNumber;
   final DateTime? expiryDate;
-  final String? fileUrl; // رابط الصورة/الملف
+  final String? fileUrl; 
   final bool isVerified;
 
   EmployeeDocument({
@@ -130,11 +126,11 @@ class EmployeeDocument {
 
 class EmployeeCustody {
   final String id;
-  final String custodyTypeId; // مربوط بـ LookupCategory.custodyTypes
-  final String itemName; // وصف إضافي (مثلاً: لابتوب Dell XPS)
+  final String custodyTypeId; 
+  final String itemName; 
   final String? serialNumber;
   final DateTime receivedDate;
-  final String condition; // New, Used, Damaged
+  final String condition; 
 
   EmployeeCustody({
     required this.id,
@@ -147,9 +143,9 @@ class EmployeeCustody {
 }
 
 class EmployeeLeaveBalance {
-  final String leaveTypeId; // مربوط بـ LookupCategory.leaveTypes
-  final double totalDays; // الرصيد السنوي المستحق
-  final double usedDays;  // المستهلك
+  final String leaveTypeId; 
+  final double totalDays; 
+  final double usedDays;  
   
   EmployeeLeaveBalance({
     required this.leaveTypeId,

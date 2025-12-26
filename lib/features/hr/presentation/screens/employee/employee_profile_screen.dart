@@ -1,15 +1,15 @@
 // FileName: lib/features/hr/presentation/screens/employee/employee_profile_screen.dart
-// Description: شاشة الملف الشخصي للموظف (Employee 360 View)
-// Version: 1.0
+// Description: شاشة الملف الشخصي للموظف (Employee 360 View) with Validation
+// Version: 1.2 (Added Alert System)
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // لتنسيق التواريخ
+import 'package:intl/intl.dart'; 
 import 'package:mokaab/features/hr/data/models/employee_model.dart';
 import 'package:mokaab/features/system_config/data/models/lookup_model.dart';
 import 'package:mokaab/features/system_config/data/seed_data.dart';
 
 class EmployeeProfileScreen extends StatefulWidget {
-  final String employeeId; // يمكن تمرير ID لجلب البيانات، هنا سنستخدم بيانات وهمية للعرض
+  final String employeeId; 
 
   const EmployeeProfileScreen({super.key, this.employeeId = 'EMP-001'});
 
@@ -19,16 +19,15 @@ class EmployeeProfileScreen extends StatefulWidget {
 
 class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late Employee _employee; // كائن الموظف
+  late Employee _employee; 
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
-    _loadMockEmployeeData(); // تحميل بيانات تجريبية
+    _loadMockEmployeeData(); 
   }
 
-  // --- محاكاة جلب بيانات موظف كاملة ---
   void _loadMockEmployeeData() {
     _employee = Employee(
       id: 'EMP-101',
@@ -45,40 +44,76 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
       emergencyContactName: 'محمد عبد الله (الأب)',
       emergencyContactPhone: '0771234567',
       
-      // معلومات العمل (IDs مطابقة لـ seed_data)
+      // معلومات العمل
       contractId: 'CONT-2024-001',
       joinDate: DateTime(2023, 1, 15),
-      departmentId: 'DEP-PROD', // إدارة الإنتاج
-      sectionId: 'SEC-CNC',     // قسم CNC
-      unitId: 'UNT-CNC-OP',     // وحدة التشغيل
-      jobTitleId: 'JOB-OP-CNC', // مشغل CNC
-      jobLevelId: 'LVL-04',     // الدرجة الرابعة
-      workLocationId: 'L1',     // المصنع الرئيسي
-      shiftId: 'SHIFT-MORNING', // وردية صباحية
+      departmentId: 'DEP-PROD', 
+      sectionId: 'SEC-CNC',     
+      unitId: 'UNT-CNC-OP',     
+      jobTitleId: 'JOB-OP-CNC', 
+      jobLevelId: 'LVL-04',     
+      workLocationId: 'L1',     
+      shiftId: 'SHIFT-MORNING', 
       directManagerId: 'م. خالد (مدير الإنتاج)', 
       
-      // معلومات مالية
+      // معلومات مالية (نقص في الآيبان للتجربة)
       basicSalary: 450.0,
       allowances: {
-        'ALL-TRANS': 30.0, // بدل مواصلات
-        'ALL-RISK': 25.0,  // بدل خطورة
+        'ALL-TRANS': 30.0, 
+        'ALL-RISK': 25.0,  
       },
       paymentMethodId: 'PAY-BANK',
       bankName: 'البنك العربي',
-      ibanNumber: 'JO12 ARAB 0010 0000 1234 5678',
+      ibanNumber: '', // فارغ لتجربة التنبيه
       socialSecurityNumber: '12345678',
 
-      // قوائم فرعية
+      // وثائق (وثيقة منتهية للتجربة)
       documents: [
         EmployeeDocument(id: 'D1', documentTypeId: 'DOC-ID', documentNumber: '9901051234', expiryDate: DateTime(2028, 5, 20), isVerified: true),
-        EmployeeDocument(id: 'D2', documentTypeId: 'DOC-CONT', documentNumber: 'CN-2023-55', expiryDate: DateTime(2024, 1, 14), isVerified: true), // ينتهي قريباً
+        EmployeeDocument(id: 'D2', documentTypeId: 'DOC-CONT', documentNumber: 'CN-2023-55', expiryDate: DateTime(2023, 12, 30), isVerified: true), // منتهي
       ],
       custodies: [
         EmployeeCustody(id: 'C1', custodyTypeId: 'CUST-UNIFORM', itemName: 'زي سلامة كامل', receivedDate: DateTime(2023, 1, 15)),
-        EmployeeCustody(id: 'C2', custodyTypeId: 'CUST-TOOLS', itemName: 'طقم مفاتيح CNC', receivedDate: DateTime(2023, 2, 1)),
       ],
       status: EmployeeStatus.active,
     );
+  }
+
+  // --- دالة فحص النواقص (Validation Engine) ---
+  List<String> _checkMissingData() {
+    List<String> missingItems = [];
+
+    // 1. فحص الوثائق الإلزامية
+    final allDocTypes = masterLookups[LookupCategory.documentTypes] ?? [];
+    final mandatoryDocTypes = allDocTypes.where((d) => d.metaData?['mandatory'] == true).toList();
+
+    for (var docType in mandatoryDocTypes) {
+      bool hasDoc = _employee.documents.any((d) => d.documentTypeId == docType.id);
+      if (!hasDoc) {
+        missingItems.add("وثيقة مفقودة: ${docType.name}");
+      }
+    }
+
+    // 2. فحص صلاحية الوثائق الموجودة
+    for (var doc in _employee.documents) {
+      if (doc.isExpired) {
+        final docName = _getNameFromLookup(LookupCategory.documentTypes, doc.documentTypeId);
+        missingItems.add("منتهي الصلاحية: $docName");
+      }
+    }
+
+    // 3. فحص البيانات المالية والأساسية
+    if (_employee.ibanNumber == null || _employee.ibanNumber!.isEmpty) {
+      missingItems.add("بيانات ناقصة: رقم الآيبان (IBAN)");
+    }
+    if (_employee.socialSecurityNumber == null || _employee.socialSecurityNumber!.isEmpty) {
+      missingItems.add("بيانات ناقصة: رقم الضمان الاجتماعي");
+    }
+    if (_employee.emergencyContactPhone.isEmpty) {
+      missingItems.add("بيانات ناقصة: هاتف الطوارئ");
+    }
+
+    return missingItems;
   }
 
   @override
@@ -93,7 +128,6 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
         },
         body: Column(
           children: [
-            // شريط التبويبات
             Container(
               color: Colors.white,
               child: TabBar(
@@ -112,7 +146,6 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
                 ],
               ),
             ),
-            // محتوى التبويبات
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -129,19 +162,14 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // إجراءات سريعة (تعديل، طباعة، إنهاء خدمات)
-          _showActionsBottomSheet(context);
-        },
+        onPressed: () => _showActionsBottomSheet(context),
         backgroundColor: const Color(0xFF00897B),
         child: const Icon(Icons.edit_note),
       ),
     );
   }
 
-  // --- 1. الترويسة (Header) ---
   SliverAppBar _buildSliverAppBar() {
-    // جلب اسم الوظيفة والقسم من القوائم
     final jobTitle = _getNameFromLookup(LookupCategory.jobTitles, _employee.jobTitleId);
     final department = _getNameFromLookup(LookupCategory.departments, _employee.departmentId);
 
@@ -222,12 +250,17 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
     );
   }
 
-  // --- 2. التبويب الأول: شخصي ---
+  // --- التبويب الأول: شخصي (مع التنبيهات) ---
   Widget _buildPersonalInfoTab() {
+    final warnings = _checkMissingData();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // عرض بطاقة التنبيهات في الأعلى
+          _buildAlertCard(warnings),
+
           _buildCard(
             title: "البيانات الأساسية",
             icon: Icons.person_outline,
@@ -264,7 +297,62 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
     );
   }
 
-  // --- 3. التبويب الثاني: العمل ---
+  Widget _buildAlertCard(List<String> warnings) {
+    if (warnings.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red[50],
+        border: Border.all(color: Colors.red[200]!),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(
+                "تنبيه: ملف الموظف غير مكتمل (${warnings.length})",
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red, fontSize: 14),
+              ),
+            ],
+          ),
+          const Divider(color: Colors.redAccent),
+          ...warnings.map((w) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2.0),
+            child: Row(
+              children: [
+                const Icon(Icons.circle, size: 6, color: Colors.red),
+                const SizedBox(width: 8),
+                Text(w, style: TextStyle(fontSize: 12, color: Colors.red[900])),
+              ],
+            ),
+          )),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                _tabController.animateTo(3); // الانتقال لتبويب الوثائق
+              },
+              icon: const Icon(Icons.upload_file, size: 16),
+              label: const Text("استكمال البيانات والوثائق"),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.red,
+                side: const BorderSide(color: Colors.red),
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  // --- التبويب الثاني: العمل ---
   Widget _buildWorkInfoTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -276,7 +364,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
             children: [
               _buildInfoRow("تاريخ التعيين", DateFormat('yyyy/MM/dd').format(_employee.joinDate)),
               _buildInfoRow("الدرجة الوظيفية", _getNameFromLookup(LookupCategory.jobLevels, _employee.jobLevelId)),
-              _buildInfoRow("نوع العقد", "عقد محدد المدة (FIXED)"), // يحتاج جلب من العقد
+              _buildInfoRow("نوع العقد", "عقد محدد المدة (FIXED)"),
               _buildInfoRow("المدير المباشر", _employee.directManagerId ?? "-"),
             ],
           ),
@@ -287,7 +375,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
             children: [
               _buildInfoRow("الدائرة", _getNameFromLookup(LookupCategory.departments, _employee.departmentId)),
               _buildInfoRow("القسم", _getNameFromLookup(LookupCategory.sections, _employee.sectionId)),
-              _buildInfoRow("الوحدة", _getNameFromLookup(LookupCategory.units, _employee.unitId ?? "")),
+              _buildInfoRow("الوحدة", _getNameFromLookup(LookupCategory.units, _employee.unitId)),
               _buildInfoRow("موقع العمل", _getNameFromLookup(LookupCategory.locations, _employee.workLocationId)),
             ],
           ),
@@ -305,7 +393,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
     );
   }
 
-  // --- 4. التبويب الثالث: المالي ---
+  // --- التبويب الثالث: المالي ---
   Widget _buildFinancialTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -340,7 +428,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
     );
   }
 
-  // --- 5. التبويب الرابع: الوثائق ---
+  // --- التبويب الرابع: الوثائق ---
   Widget _buildDocumentsTab() {
     return ListView.separated(
       padding: const EdgeInsets.all(16),
@@ -350,19 +438,15 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
         final doc = _employee.documents[index];
         final typeName = _getNameFromLookup(LookupCategory.documentTypes, doc.documentTypeId);
         
-        // التحقق من الانتهاء
         final isExpired = doc.isExpired;
         final isSoon = doc.isExpiringSoon;
         
         Color statusColor = Colors.green;
-        String statusText = "ساري المفعول";
         
         if (isExpired) {
           statusColor = Colors.red;
-          statusText = "منتهي الصلاحية";
         } else if (isSoon) {
           statusColor = Colors.orange;
-          statusText = "ينتهي قريباً";
         }
 
         return Card(
@@ -397,7 +481,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
     );
   }
 
-  // --- 6. التبويب الخامس: العهد ---
+  // --- التبويب الخامس: العهد ---
   Widget _buildCustodyTab() {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -477,14 +561,13 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen> with Sing
     );
   }
 
-  // دالة مساعدة لترجمة الـ IDs إلى أسماء باستخدام seed_data
   String _getNameFromLookup(LookupCategory category, String? id) {
     if (id == null) return "-";
     final list = masterLookups[category] ?? [];
     try {
       return list.firstWhere((e) => e.id == id).name;
     } catch (e) {
-      return id; // إذا لم يجد الاسم يعيد الكود كما هو
+      return id; 
     }
   }
 
