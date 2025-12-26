@@ -1,6 +1,6 @@
 // FileName: lib/features/hr/contracts/screens/contract_management_screen.dart
 // Description: شاشة إنشاء وإدارة عقود التعيين (The Core Linker)
-// Version: 1.1 (Printing Integration)
+// Version: 1.3 (Fix Dropdown Value Error)
 
 import 'package:flutter/material.dart';
 import 'package:mokaab/features/system_config/data/models/lookup_model.dart';
@@ -163,8 +163,12 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
           onChanged: (val) => setState(() => _contract.employeeName = val),
         ),
         const SizedBox(height: 16),
+        
+        // --- التصحيح هنا ---
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(labelText: "نوع العقد", border: OutlineInputBorder(), prefixIcon: Icon(Icons.description)),
+          // التأكد من أن القيمة المختارة موجودة فعلياً في القائمة
+          value: _contractTypes.any((e) => e.id == _contract.contractType) ? _contract.contractType : null,
           items: _contractTypes.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
           onChanged: (val) {
             setState(() {
@@ -177,7 +181,10 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
               }
             });
           },
+          validator: (value) => value == null ? 'يرجى اختيار نوع العقد' : null,
         ),
+        // --------------------
+
         const SizedBox(height: 16),
         Row(
           children: [
@@ -219,6 +226,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(labelText: "الدائرة / الإدارة", border: OutlineInputBorder()),
+          value: _departments.any((e) => e.id == _contract.departmentId) ? _contract.departmentId : null,
           items: _departments.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
           onChanged: (val) => setState(() => _contract.departmentId = val),
         ),
@@ -226,6 +234,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(labelText: "القسم", border: OutlineInputBorder()),
           // ذكاء النظام: فلترة الأقسام بناءً على الدائرة المختارة
+          value: _sections.any((e) => e.id == _contract.sectionId) ? _contract.sectionId : null,
           items: _sections
               .where((s) => _contract.departmentId == null || s.metaData?['parentId'] == _contract.departmentId)
               .map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
@@ -238,11 +247,11 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
               flex: 2,
               child: DropdownButtonFormField<String>(
                 decoration: const InputDecoration(labelText: "المسمى الوظيفي", border: OutlineInputBorder()),
+                value: _jobTitles.any((e) => e.id == _contract.jobTitleId) ? _contract.jobTitleId : null,
                 items: _jobTitles.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
                 onChanged: (val) {
                   setState(() {
                     _contract.jobTitleId = val;
-                    // ذكاء النظام: اقتراح الدرجة بناءً على الوظيفة (لو كان مربوطاً)
                   });
                 },
               ),
@@ -252,6 +261,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
               flex: 1,
               child: DropdownButtonFormField<String>(
                 decoration: const InputDecoration(labelText: "الدرجة الوظيفية", border: OutlineInputBorder()),
+                value: _jobLevels.any((e) => e.id == _contract.jobLevelId) ? _contract.jobLevelId : null,
                 items: _jobLevels.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
                 onChanged: (val) {
                    setState(() {
@@ -324,11 +334,11 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(labelText: "الوردية الافتراضية", border: OutlineInputBorder(), prefixIcon: Icon(Icons.access_time)),
+          value: _shifts.any((e) => e.id == _contract.shiftId) ? _contract.shiftId : null,
           items: _shifts.map((e) => DropdownMenuItem(value: e.id, child: Text("${e.name} (${e.metaData?['start']} - ${e.metaData?['end']})"))).toList(),
           onChanged: (val) => setState(() => _contract.shiftId = val),
         ),
         const SizedBox(height: 16),
-        // هنا يمكن إضافة أيام الإجازة السنوية (سحب من Job Level Metadata)
         const ListTile(
           leading: Icon(Icons.beach_access, color: Colors.orange),
           title: Text("رصيد الإجازات السنوية"),
@@ -384,10 +394,8 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
   // --- لوحة الملخص الجانبية (Smart Summary) ---
   Widget _buildContractSummary() {
     double totalSalary = _contract.basicSalary;
-    // حساب بسيط للبدلات (يمكن تطويره ليكون أدق)
     double totalAllowances = 0; 
     for (var id in _contract.allowanceIds) {
-      // هنا نفترض قيمة افتراضية للبدل لغايات العرض، في الواقع نحتاج إدخال قيم للبدلات
       totalAllowances += 50; 
     }
     double grandTotal = totalSalary + totalAllowances;
@@ -435,7 +443,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  // --- شريط الأزرار (Buttons Bar) ---
   Widget _buildActionButtons() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -451,7 +458,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
             if (_currentStep < 4) {
               setState(() => _currentStep++);
             } else {
-              // --- التعديل الجديد: الطباعة ---
               _saveAndPrintContract();
             }
           },
@@ -471,14 +477,11 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  // --- دالة الحفظ والطباعة ---
   void _saveAndPrintContract() async {
-    // 1. منطق الحفظ في قاعدة البيانات (مستقبلاً)
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("تم حفظ العقد وجاري إنشاء ملف PDF..."))
     );
 
-    // 2. استدعاء خدمة الطباعة
     try {
       await ContractPdfService.printContract(_contract);
     } catch (e) {

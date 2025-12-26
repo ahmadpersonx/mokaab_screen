@@ -1,10 +1,6 @@
 // FileName: lib/features/home/screens/home_screen.dart
 import 'package:flutter/material.dart';
-import 'package:mokaab/features/hr/org_structure/screens/departments_screen.dart';
-import 'package:mokaab/features/system_config/screens/lookups_management_screen.dart';
-import 'package:mokaab/features/hr/presentation/screens/employee/employee_list_screen.dart';
-// استيراد شاشة العقود الجديدة
-import 'package:mokaab/features/hr/contracts/screens/contract_management_screen.dart';
+import 'package:mokaab/features/hr/presentation/screens/hr_dashboard_screen.dart'; // استيراد الشاشة الجديدة
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,136 +10,118 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text("Mokaab ERP - الرئيسية"),
+        title: const Text("Mokaab ERP"),
         centerTitle: true,
         backgroundColor: const Color(0xFF263238),
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "تطبيقات النظام",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
-            ),
-            const SizedBox(height: 20),
-            
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2, // عمودين في الشبكة
-              crossAxisSpacing: 15,
-              mainAxisSpacing: 15,
-              childAspectRatio: 1.3,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          int crossAxisCount = 2;
+          if (constraints.maxWidth > 1200) crossAxisCount = 6;
+          else if (constraints.maxWidth > 800) crossAxisCount = 4;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 1. الموارد البشرية (الهيكل)
-                _buildModuleCard(
-                  context,
-                  title: "الموارد البشرية",
-                  subtitle: "الهيكل، الموظفين، المهام",
-                  icon: Icons.people_alt,
-                  color: Colors.orange,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const DepartmentsDashboard()));
-                  },
+                const Text(
+                  "تطبيقات النظام",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
                 ),
+                const SizedBox(height: 30),
+                
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.0,
+                  children: [
+                    // --- الزر الرئيسي الجديد ---
+                    _buildCompactCard(
+                      context,
+                      title: "الموارد البشرية (HR)",
+                      icon: Icons.groups, // أيقونة تعبر عن المجموع
+                      color: Colors.orange[800]!,
+                      onTap: () {
+                        // الانتقال للوحة تحكم الـ HR
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const HrDashboardScreen()));
+                      },
+                    ),
 
-                // 2. دليل الموظفين
-                _buildModuleCard(
-                  context,
-                  title: "دليل الموظفين",
-                  subtitle: "سجلات، ملفات، وثائق",
-                  icon: Icons.badge,
-                  color: Colors.blue,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const EmployeeListScreen()));
-                  },
-                ),
-
-                // 3. إدارة العقود (الجديد)
-                _buildModuleCard(
-                  context,
-                  title: "إدارة العقود",
-                  subtitle: "إنشاء، تجديد، إنهاء",
-                  icon: Icons.gavel, // أيقونة تعبر عن القانون/العقود
-                  color: const Color(0xFF00897B), // لون مميز (Teal)
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ContractManagementScreen()));
-                  },
-                ),
-
-                // 4. إعدادات النظام
-                _buildModuleCard(
-                  context,
-                  title: "إعدادات النظام",
-                  subtitle: "القوائم، الثوابت، SOPs",
-                  icon: Icons.settings_applications,
-                  color: Colors.blueGrey,
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const LookupsManagementScreen()));
-                  },
-                ),
-
-                // 5. المالية (قريباً)
-                _buildModuleCard(
-                  context,
-                  title: "المالية",
-                  subtitle: "قريباً...",
-                  icon: Icons.attach_money,
-                  color: Colors.grey,
-                  onTap: () {},
+                    // --- باقي الأقسام (محاكاة) ---
+                    _buildCompactCard(context, title: "الإدارة المالية", icon: Icons.account_balance_wallet, color: Colors.green, onTap: () {}),
+                    _buildCompactCard(context, title: "المبيعات والعملاء", icon: Icons.shopping_cart, color: Colors.blue, onTap: () {}),
+                    _buildCompactCard(context, title: "إدارة الإنتاج", icon: Icons.factory, color: Colors.brown, onTap: () {}),
+                    _buildCompactCard(context, title: "سلسلة الإمداد", icon: Icons.local_shipping, color: Colors.teal, onTap: () {}),
+                    _buildCompactCard(context, title: "إدارة المخزون", icon: Icons.inventory_2, color: Colors.indigo, onTap: () {}),
+                    _buildCompactCard(context, title: "التقارير الذكية", icon: Icons.pie_chart, color: Colors.purple, onTap: () {}),
+                    _buildCompactCard(context, title: "المهام والمتابعات", icon: Icons.task_alt, color: Colors.redAccent, badgeCount: 3, onTap: () {}),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          );
+        }
       ),
     );
   }
 
-  Widget _buildModuleCard(BuildContext context, {
+  Widget _buildCompactCard(BuildContext context, {
     required String title,
-    required String subtitle,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
+    int? badgeCount,
   }) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       elevation: 2,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(16),
+        hoverColor: color.withOpacity(0.05),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, size: 32, color: color),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (badgeCount != null && badgeCount > 0)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
+                  child: Text("$badgeCount", style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                child: Icon(icon, size: 32, color: color),
               ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
