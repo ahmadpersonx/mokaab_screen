@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mokaab/features/hr/org_structure/screens/departments_screen.dart';
 import 'package:mokaab/features/system_config/screens/lookups_management_screen.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_list_screen.dart';
-import 'package:mokaab/features/hr/contracts/screens/contract_management_screen.dart';
+import 'package:mokaab/features/hr/contracts/screens/contracts_list_screen.dart'; // الاستيراد الجديد
 
 class HrDashboardScreen extends StatelessWidget {
   const HrDashboardScreen({super.key});
@@ -62,13 +62,13 @@ class HrDashboardScreen extends StatelessWidget {
                     ),
 
                     // 3. إدارة العقود
-                    _buildCompactCard(
-                      context,
-                      title: "إدارة العقود",
-                      icon: Icons.gavel,
-                      color: const Color(0xFF00897B),
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContractManagementScreen())),
-                    ),
+_buildCompactCard(
+  context,
+  title: "إدارة العقود",
+  icon: Icons.gavel,
+  color: const Color(0xFF00897B),
+  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ContractsListScreen())), // التوجيه للقائمة
+),
 
                     // 4. القوائم والإعدادات
                     _buildCompactCard(
