@@ -4,6 +4,7 @@ import 'package:mokaab/features/hr/org_structure/screens/departments_screen.dart
 import 'package:mokaab/features/system_config/screens/lookups_management_screen.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_list_screen.dart';
 import 'package:mokaab/features/hr/contracts/screens/contracts_list_screen.dart'; // الاستيراد الجديد
+import 'package:mokaab/features/hr/attendance/screens/attendance_dashboard_screen.dart'; // استيراد شاشة الدوام الجديدة
 
 class HrDashboardScreen extends StatelessWidget {
   const HrDashboardScreen({super.key});
@@ -43,6 +44,26 @@ class HrDashboardScreen extends StatelessWidget {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.0,
                   children: [
+
+                    // --- 5. متابعة الدوام (الزر الجديد) ---
+                    _buildCompactCard(
+                      context,
+                      title: "متابعة الدوام",
+                      icon: Icons.access_time_filled, // أيقونة معبرة عن الوقت
+                      color: Colors.indigo, // لون مميز
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AttendanceDashboardScreen())),
+                    ),
+                    
+                      // 1. الهيكل التنظيمي
+                    _buildCompactCard(
+                      context,
+                      title: "الهيكل التنظيمي",
+                      icon: Icons.account_tree,
+                      color: Colors.orange,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DepartmentsDashboard())),
+                    ),
+
+                    
                     // 1. الهيكل التنظيمي
                     _buildCompactCard(
                       context,
