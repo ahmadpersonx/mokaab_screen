@@ -1,17 +1,34 @@
 // FileName: lib/features/hr/org_structure/screens/departments_screen.dart
 import 'package:flutter/material.dart';
-
-// --- (1) استيراد البيانات (لحل مشكلة mockDepartments) ---
-import 'package:mokaab/features/hr/org_structure/data/mock_departments.dart';
-
-// --- (2) استيراد الويدجت (المهام) ---
+import 'package:mokaab/features/system_config/data/models/lookup_model.dart'; // المودل الأساسي
+import 'package:mokaab/features/system_config/data/seed_data.dart'; // مصدر البيانات الحقيقي
 import 'package:mokaab/features/hr/org_structure/widgets/dynamic_task_list.dart';
-
-// --- (3) استيراد الشاشات المرتبطة ---
 import 'package:mokaab/features/hr/org_structure/screens/org_chart_screen.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_list_screen.dart';
 
-// --- 1. الشاشة الرئيسية (Dashboard) ---
+// تعريف كلاس Department محلياً (أو يمكن فصله) لسهولة التعامل داخل الشاشة
+class Department {
+  final String id;
+  final String name;
+  final String managerName;
+  final int employeeCount;
+  final int openJobs;
+  final double totalExpenses;
+  final Color color;
+  final String? parentDept;
+
+  Department({
+    required this.id,
+    required this.name,
+    required this.managerName,
+    required this.employeeCount,
+    required this.openJobs,
+    required this.totalExpenses,
+    required this.color,
+    this.parentDept,
+  });
+}
+
 class DepartmentsDashboard extends StatefulWidget {
   const DepartmentsDashboard({super.key});
 
@@ -20,7 +37,42 @@ class DepartmentsDashboard extends StatefulWidget {
 }
 
 class _DepartmentsDashboardState extends State<DepartmentsDashboard> {
-  bool isKanban = true; 
+  bool isKanban = true;
+  List<Department> departments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDepartments();
+  }
+
+  // --- دالة تحويل البيانات من القوائم (LookupItem) إلى (Department) ---
+  void _loadDepartments() {
+    final rawDepts = masterLookups[LookupCategory.departments] ?? [];
+    
+    setState(() {
+      departments = rawDepts.map((item) {
+        // قراءة البيانات الذكية من metaData
+        final manager = item.metaData?['manager'] ?? 'غير محدد';
+        final budget = double.tryParse(item.metaData?['budget'] ?? '0') ?? 0.0;
+        
+        // محاكاة لأرقام الموظفين (لاحقاً ستربط بجدول الموظفين الفعلي)
+        final empCount = (item.id.hashCode % 50) + 5; 
+        final jobs = (item.id.hashCode % 5);
+
+        return Department(
+          id: item.id,
+          name: item.name,
+          managerName: manager,
+          employeeCount: empCount,
+          openJobs: jobs,
+          totalExpenses: budget * 0.8, // افتراض المصروف الفعلي
+          color: item.color ?? Colors.blue,
+          parentDept: item.metaData?['type'] ?? 'GEN', // مؤقتاً نعرض النوع
+        );
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,19 +81,24 @@ class _DepartmentsDashboardState extends State<DepartmentsDashboard> {
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          _buildBrandingHeader(), 
+          _buildBrandingHeader(),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: isKanban ? _buildKanbanView() : _buildListView(),
+              child: departments.isEmpty 
+                  ? const Center(child: Text("لا توجد إدارات معرفة في النظام"))
+                  : (isKanban ? _buildKanbanView() : _buildListView()),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        label: const Text('قسم جديد'),
-        icon: const Icon(Icons.add),
+        onPressed: () {
+            // هنا يمكن فتح شاشة "إدارة القوائم" لإضافة قسم جديد
+            // Navigator.push...
+        },
+        label: const Text('إدارة الهيكل'),
+        icon: const Icon(Icons.settings),
         backgroundColor: const Color(0xFF00897B),
       ),
     );
@@ -49,7 +106,7 @@ class _DepartmentsDashboardState extends State<DepartmentsDashboard> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      title: const Text("الهيكل التنظيمي"),
+      title: const Text("الهيكل التنظيمي (Departments)"),
       centerTitle: false,
       actions: [
         IconButton(
@@ -99,7 +156,7 @@ class _DepartmentsDashboardState extends State<DepartmentsDashboard> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
           ),
           Text(
-            "لملفات المحاكة والمخططات",
+            "لملفات المحاكة والمخططات - الإدارات",
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
@@ -115,10 +172,9 @@ class _DepartmentsDashboardState extends State<DepartmentsDashboard> {
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
-      // الآن mockDepartments ستعمل بشكل صحيح
-      itemCount: mockDepartments.length,
+      itemCount: departments.length,
       itemBuilder: (context, index) {
-        final dept = mockDepartments[index];
+        final dept = departments[index];
         return _DepartmentCard(
           department: dept,
           onTap: () => _navigateToDetails(dept),
@@ -129,9 +185,9 @@ class _DepartmentsDashboardState extends State<DepartmentsDashboard> {
 
   Widget _buildListView() {
     return ListView.builder(
-      itemCount: mockDepartments.length,
+      itemCount: departments.length,
       itemBuilder: (context, index) {
-        final dept = mockDepartments[index];
+        final dept = departments[index];
         return Card(
           elevation: 0,
           margin: const EdgeInsets.only(bottom: 8),
@@ -145,7 +201,7 @@ class _DepartmentsDashboardState extends State<DepartmentsDashboard> {
               child: Icon(Icons.apartment, color: dept.color),
             ),
             title: Text(dept.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text("المدير: ${dept.managerName} | يتبع لـ: ${dept.parentDept ?? '-'}"),
+            subtitle: Text("المدير: ${dept.managerName} | النوع: ${dept.parentDept ?? '-'}"),
             trailing: Chip(
               label: Text("${dept.employeeCount} موظف"),
               backgroundColor: Colors.grey[100],
@@ -201,8 +257,8 @@ class DepartmentDetailsScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _SmartButton(
-                      label: "تكاليف شهرية",
-                      value: "${department.totalExpenses} د.أ",
+                      label: "المصروفات (YTD)",
+                      value: "${(department.totalExpenses/1000).toStringAsFixed(1)}k د.أ",
                       icon: Icons.attach_money,
                       onPressed: () {},
                     ),
@@ -229,7 +285,7 @@ class DepartmentDetailsScreen extends StatelessWidget {
                           indicatorColor: Colors.teal,
                           tabs: [
                             Tab(text: "معلومات عامة"),
-                            Tab(text: "المالية"),
+                            Tab(text: "المالية والموازنة"),
                             Tab(text: "ملاحظات"),
                           ],
                         ),
@@ -239,7 +295,7 @@ class DepartmentDetailsScreen extends StatelessWidget {
                             children: [
                               _buildGeneralInfoTab(),
                               _buildFinancialTab(),
-                              const Center(child: Text("مساحة للملاحظات الإدارية")),
+                              const Center(child: Text("لا توجد ملاحظات إدارية مسجلة")),
                             ],
                           ),
                         ),
@@ -270,7 +326,7 @@ class DepartmentDetailsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(department.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text("يتبع لـ: ${department.parentDept ?? 'لا يوجد'}", style: const TextStyle(color: Colors.grey)),
+            Text("نوع الإدارة: ${department.parentDept ?? 'عام'}", style: const TextStyle(color: Colors.grey)),
           ],
         )
       ],
@@ -282,12 +338,11 @@ class DepartmentDetailsScreen extends StatelessWidget {
       padding: const EdgeInsets.only(top: 16),
       child: Column(
         children: [
-          _buildReadOnlyField("مدير القسم", department.managerName),
-          _buildReadOnlyField("نوع القسم", "تشغيلي"),
+          _buildReadOnlyField("مدير الإدارة", department.managerName),
+          _buildReadOnlyField("عدد الموظفين", "${department.employeeCount}"),
           const Divider(height: 30),
-          
-          DynamicTaskList(departmentCode: department.id == '2' ? 'PROD' : 'HQ'), 
-          
+          // ربط المهام: إذا كانت إنتاج اعرض PROD وإلا HQ
+          DynamicTaskList(departmentCode: department.name.contains("الإنتاج") ? 'PROD' : 'HQ'), 
           const SizedBox(height: 20),
         ],
       ),
@@ -298,8 +353,13 @@ class DepartmentDetailsScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(top: 16),
       children: [
-        _buildReadOnlyField("مركز التكلفة", "CC-${department.id}00"),
-        _buildReadOnlyField("الميزانية السنوية", "100,000 د.أ"),
+        _buildReadOnlyField("مركز التكلفة", "CC-${department.id.substring(4)}"), // محاكاة من الـ ID
+        _buildReadOnlyField("الميزانية السنوية", "${(department.totalExpenses * 1.25).toStringAsFixed(0)} د.أ"),
+        _buildReadOnlyField("المصروف الفعلي", "${department.totalExpenses.toStringAsFixed(0)} د.أ"),
+        const SizedBox(height: 10),
+        const Text("نسبة استهلاك الموازنة:", style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        LinearProgressIndicator(value: 0.8, color: Colors.teal, backgroundColor: Colors.grey[200]),
       ],
     );
   }
@@ -309,8 +369,8 @@ class DepartmentDetailsScreen extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         children: [
-          SizedBox(width: 100, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey))),
-          Text(value, style: const TextStyle(fontSize: 16)),
+          SizedBox(width: 120, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey))),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
         ],
       ),
     );
@@ -327,13 +387,13 @@ class DepartmentDetailsScreen extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              const CircleAvatar(radius: 12, backgroundColor: Colors.teal, child: Text("HR", style: TextStyle(fontSize: 10))),
+              const CircleAvatar(radius: 12, backgroundColor: Colors.teal, child: Text("SYS", style: TextStyle(fontSize: 10, color: Colors.white))),
               const SizedBox(width: 8),
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                  child: const Text("تم تحديث مدير القسم بتاريخ 2025-12-26", style: TextStyle(fontSize: 12)),
+                  child: const Text("تم تحديث بيانات الموازنة تلقائياً من النظام المالي", style: TextStyle(fontSize: 12)),
                 ),
               )
             ],
@@ -404,7 +464,7 @@ class _DepartmentCard extends StatelessWidget {
               children: [
                 const Icon(Icons.person_outline, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
-                Text(department.managerName, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                Expanded(child: Text(department.managerName, style: const TextStyle(fontSize: 11, color: Colors.grey), overflow: TextOverflow.ellipsis)),
               ],
             ),
             Row(

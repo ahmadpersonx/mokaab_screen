@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:mokaab/features/hr/org_structure/screens/departments_screen.dart';
 import 'package:mokaab/features/system_config/screens/lookups_management_screen.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_list_screen.dart';
+// استيراد شاشة العقود الجديدة
+import 'package:mokaab/features/hr/contracts/screens/contract_management_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,11 +33,12 @@ class HomeScreen extends StatelessWidget {
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
+              crossAxisCount: 2, // عمودين في الشبكة
               crossAxisSpacing: 15,
               mainAxisSpacing: 15,
               childAspectRatio: 1.3,
               children: [
+                // 1. الموارد البشرية (الهيكل)
                 _buildModuleCard(
                   context,
                   title: "الموارد البشرية",
@@ -43,15 +46,15 @@ class HomeScreen extends StatelessWidget {
                   icon: Icons.people_alt,
                   color: Colors.orange,
                   onTap: () {
-                    // DepartmentsDashboard هي StatefulWidget ولها const constructor، لذا استخدام const هنا صحيح
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const DepartmentsDashboard()));
                   },
                 ),
 
+                // 2. دليل الموظفين
                 _buildModuleCard(
                   context,
                   title: "دليل الموظفين",
-                  subtitle: "سجلات، عقود، ملفات",
+                  subtitle: "سجلات، ملفات، وثائق",
                   icon: Icons.badge,
                   color: Colors.blue,
                   onTap: () {
@@ -59,6 +62,19 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
 
+                // 3. إدارة العقود (الجديد)
+                _buildModuleCard(
+                  context,
+                  title: "إدارة العقود",
+                  subtitle: "إنشاء، تجديد، إنهاء",
+                  icon: Icons.gavel, // أيقونة تعبر عن القانون/العقود
+                  color: const Color(0xFF00897B), // لون مميز (Teal)
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ContractManagementScreen()));
+                  },
+                ),
+
+                // 4. إعدادات النظام
                 _buildModuleCard(
                   context,
                   title: "إعدادات النظام",
@@ -70,6 +86,7 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
 
+                // 5. المالية (قريباً)
                 _buildModuleCard(
                   context,
                   title: "المالية",
