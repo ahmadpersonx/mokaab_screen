@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_requests_screen.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/requests/request_forms.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/my_attendance_screen.dart';
-
+import 'package:mokaab/features/hr/notifications/screens/notifications_center_screen.dart';
 // نموذج التبليغ
 class HrNotification {
   final String title;
@@ -45,9 +45,11 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
+       IconButton(
             icon: const Icon(Icons.notifications_active),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsCenterScreen()));
+            },
           ),
           const SizedBox(width: 8),
         ],

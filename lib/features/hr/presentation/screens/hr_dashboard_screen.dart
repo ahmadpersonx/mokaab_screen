@@ -6,7 +6,7 @@ import 'package:mokaab/features/hr/presentation/screens/employee/employee_list_s
 import 'package:mokaab/features/hr/contracts/screens/contracts_list_screen.dart'; // الاستيراد الجديد
 import 'package:mokaab/features/hr/attendance/screens/attendance_dashboard_screen.dart'; // استيراد شاشة الدوام الجديدة
 import 'package:mokaab/features/hr/leaves/screens/leaves_management_screen.dart';
-
+import 'package:mokaab/features/hr/notifications/screens/send_memo_screen.dart';
 
 class HrDashboardScreen extends StatelessWidget {
   const HrDashboardScreen({super.key});
@@ -66,7 +66,13 @@ class HrDashboardScreen extends StatelessWidget {
                     ),
 
                    
-                
+                _buildCompactCard(
+                      context,
+                      title: "التعاميم والتبليغات",
+                      icon: Icons.campaign, // أيقونة مكبر الصوت
+                      color: Colors.deepPurple,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SendMemoScreen())),
+                    ),
 
                     // 2. دليل الموظفين
                     _buildCompactCard(
