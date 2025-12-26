@@ -1,23 +1,11 @@
 // FileName: lib/features/hr/presentation/screens/employee/employee_portal_screen.dart
-// Description: بوابة الموظف (ESS) - Responsive Grid
-// Version: 1.1 (Resized Cards)
+// Version: 2.0 (Smart Widgets & Dashboard Style)
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_requests_screen.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/requests/request_forms.dart';
 import 'package:mokaab/features/hr/presentation/screens/employee/my_attendance_screen.dart';
-import 'package:mokaab/features/hr/notifications/screens/notifications_center_screen.dart';
-// نموذج التبليغ
-class HrNotification {
-  final String title;
-  final String body;
-  final DateTime date;
-  final String type; // info, success, warning, alert
-  final bool isRead;
-
-  HrNotification(this.title, this.body, this.date, this.type, {this.isRead = false});
-}
 
 class EmployeePortalScreen extends StatefulWidget {
   const EmployeePortalScreen({super.key});
@@ -27,110 +15,58 @@ class EmployeePortalScreen extends StatefulWidget {
 }
 
 class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
-  // بيانات وهمية للتبليغات
-  final List<HrNotification> _notifications = [
-    HrNotification("تم إيداع الراتب", "تم تحويل راتب شهر يونيو إلى حسابك البنكي.", DateTime.now().subtract(const Duration(days: 2)), "success"),
-    HrNotification("تذكير: تحديث البيانات", "يرجى تحديث صورة الهوية الشخصية قبل انتهاء الصلاحية.", DateTime.now().subtract(const Duration(days: 5)), "warning"),
-    HrNotification("تعميم إداري", "سيتم تعطيل العمل يوم الخميس بمناسبة العيد.", DateTime.now().subtract(const Duration(days: 7)), "info"),
-    HrNotification("تمت الموافقة على الإجازة", "وافق المدير المباشر على طلب الإجازة المقدم.", DateTime.now().subtract(const Duration(days: 10)), "success"),
-  ];
+  bool _hideSalary = true; // للخصوصية
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
-        title: const Text("بوابتي (خدمات الموظف)"),
-        backgroundColor: Colors.indigo[800],
+        title: const Text("بوابتي (ESS)"),
+        backgroundColor: const Color(0xFF263238), // Dark Blue theme like SAP
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-       IconButton(
-            icon: const Icon(Icons.notifications_active),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsCenterScreen()));
-            },
-          ),
-          const SizedBox(width: 8),
+          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
+          const SizedBox(width: 10),
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildWelcomeHeader(),
+            _buildHeaderProfile(),
             
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. قسم الإجراءات السريعة (Responsive)
-                  const Text("الخدمات السريعة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  
-                  // استخدام LayoutBuilder للتحكم بحجم المربعات
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      // تحديد عدد الأعمدة:
-                      // شاشة كبيرة > 1200: 6 أعمدة
-                      // تابلت > 600: 4 أعمدة
-                      // موبايل < 600: 3 أعمدة (ليكونوا صغاراً)
-                      int crossAxisCount = 3; 
-                      if (constraints.maxWidth > 1200) {
-                        crossAxisCount = 6;
-                      } else if (constraints.maxWidth > 600) {
-                        crossAxisCount = 4;
-                      }
+                  // 1. حالة الدوام (Attendance Widget)
+                  _buildAttendanceStatusWidget(),
+                  const SizedBox(height: 20),
 
-                      return GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: crossAxisCount,
-                        childAspectRatio: 1.0, // نسبة 1:1 (مربع)
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        children: [
-                          _buildActionCard(Icons.assignment, "طلباتي", Colors.blue, () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeeRequestsScreen()));
-                          }),
-                          _buildActionCard(Icons.date_range, "طلب إجازة", Colors.purple, () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveRequestScreen()));
-                          }),
-                          _buildActionCard(Icons.access_time, "مغادرة", Colors.orange, () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const HourlyPermissionScreen()));
-                          }),
-                          _buildActionCard(Icons.attach_money, "قسيمة الراتب", Colors.green, () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const MyPayslipScreen()));
-                          }),
-                        _buildActionCard(Icons.fingerprint, "سجل دوامي", Colors.redAccent, () {
-                            // الربط الجديد
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAttendanceScreen()));
-                          }),
-                          _buildActionCard(Icons.description, "'طلبات الوثائق'", Colors.teal, () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentRequestScreen()));
-                          }),
-                        ],
-                      );
-                    }
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 2. قسم التبليغات
+                  // 2. الويدجت الذكية (Smart Stats)
+                  const Text("نظرة عامة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("آخر التبليغات & التعاميم", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      TextButton(onPressed: () {}, child: const Text("عرض الكل")),
+                      Expanded(child: _buildLeaveBalanceCard()), // رصيد الإجازات
+                      const SizedBox(width: 12),
+                      Expanded(child: _buildSalaryCard()),       // آخر راتب
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  _buildNotificationsList(),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  // 3. ملخص الرصيد
-                  _buildLeaveBalanceSummary(),
+                  // 3. الخدمات السريعة (Quick Actions)
+                  const Text("خدمات سريعة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  _buildQuickActionsGrid(),
+
+                  const SizedBox(height: 20),
+
+                  // 4. الموافقات (للمدراء) - أو التنبيهات
+                  _buildApprovalsSection(),
                 ],
               ),
             ),
@@ -140,170 +76,200 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
     );
   }
 
-  // --- الترويسة الترحيبية ---
-  Widget _buildWelcomeHeader() {
+  // --- 1. هيدر البروفايل ---
+  Widget _buildHeaderProfile() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
-      decoration: BoxDecoration(
-        color: Colors.indigo[800],
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+      decoration: const BoxDecoration(
+        color: Color(0xFF263238),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 35,
-            backgroundColor: Colors.white,
-            child: Icon(Icons.person, size: 40, color: Colors.indigo),
+          Stack(
+            children: [
+              const CircleAvatar(radius: 32, backgroundColor: Colors.white, child: Icon(Icons.person, size: 40)),
+              Positioned(
+                bottom: 0, right: 0,
+                child: Container(
+                  width: 16, height: 16,
+                  decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                ),
+              )
+            ],
           ),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("مرحباً، أحمد عبد الله", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              Text("مشغل CNC - إدارة الإنتاج", style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
+              const Text("مرحباً، أحمد", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text("مشغل CNC | الإدارة الهندسية", style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- 2. ويدجت الدوام (Smart Attendance) ---
+  Widget _buildAttendanceStatusWidget() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.indigo.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("حالة اليوم", style: TextStyle(color: Colors.white70, fontSize: 12)),
               const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(10)),
-                child: const Text("نشط (Active)", style: TextStyle(color: Colors.white, fontSize: 10)),
+              const Text("حاضر (On Duty)", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 4),
+              Row(
+                children: const [
+                  Icon(Icons.login, color: Colors.greenAccent, size: 14),
+                  SizedBox(width: 4),
+                  Text("دخول: 07:55 ص", style: TextStyle(color: Colors.white, fontSize: 12)),
+                ],
               )
             ],
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+               // فتح شاشة تسجيل الدخول/الخروج
+            },
+            icon: const Icon(Icons.fingerprint, color: Colors.indigo),
+            label: const Text("تسجيل", style: TextStyle(color: Colors.indigo, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white, shape: const StadiumBorder()),
           )
         ],
       ),
     );
   }
 
-  // --- تصميم البطاقة المصغرة (نفس ستايل الشاشات الأخرى) ---
-  Widget _buildActionCard(IconData icon, String label, Color color, VoidCallback onTap) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16), // زوايا دائرية
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        hoverColor: color.withOpacity(0.05),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // أيقونة داخل دائرة ملونة شفافة
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label, 
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black87), 
-              textAlign: TextAlign.center
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- قائمة التبليغات ---
-  Widget _buildNotificationsList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _notifications.length,
-      itemBuilder: (context, index) {
-        final notif = _notifications[index];
-        Color iconColor = Colors.blue;
-        IconData icon = Icons.info;
-
-        if (notif.type == 'success') { iconColor = Colors.green; icon = Icons.check_circle; }
-        if (notif.type == 'warning') { iconColor = Colors.orange; icon = Icons.warning; }
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          elevation: 0,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.grey.shade200),
-          ),
-          child: ListTile(
-            leading: Icon(icon, color: iconColor),
-            title: Text(notif.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(notif.body, style: const TextStyle(fontSize: 12)),
-                const SizedBox(height: 4),
-                Text(DateFormat('yyyy/MM/dd HH:mm').format(notif.date), style: TextStyle(fontSize: 10, color: Colors.grey[500])),
-              ],
-            ),
-            isThreeLine: true,
-          ),
-        );
-      },
-    );
-  }
-
-  // --- ملخص رصيد الإجازات ---
-  Widget _buildLeaveBalanceSummary() {
+  // --- 3. بطاقة رصيد الإجازات (Visual) ---
+  Widget _buildLeaveBalanceCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFF263238), Color(0xFF37474F)]),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5)]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildBalanceItem("رصيد سنوي", "14", "يوم"),
-          Container(width: 1, height: 40, color: Colors.white24),
-          _buildBalanceItem("مستهلك", "5", "أيام"),
-          Container(width: 1, height: 40, color: Colors.white24),
-          _buildBalanceItem("المتبقي", "9", "أيام"),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Icon(Icons.beach_access, color: Colors.orange, size: 20),
+              Text("9 أيام", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[800], fontSize: 16)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text("رصيد الإجازات", style: TextStyle(color: Colors.grey, fontSize: 12)),
+          const SizedBox(height: 8),
+          LinearProgressIndicator(value: 0.65, backgroundColor: Colors.orange[50], color: Colors.orange, minHeight: 6, borderRadius: BorderRadius.circular(3)),
+          const SizedBox(height: 4),
+          const Text("متبقي من 14 يوم", style: TextStyle(fontSize: 10, color: Colors.grey)),
         ],
       ),
     );
   }
 
-  Widget _buildBalanceItem(String label, String val, String unit) {
-    return Column(
+  // --- 4. بطاقة الراتب (Privacy Mode) ---
+  Widget _buildSalaryCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5)]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Icon(Icons.account_balance_wallet, color: Colors.green, size: 20),
+              InkWell(
+                onTap: () => setState(() => _hideSalary = !_hideSalary),
+                child: Icon(_hideSalary ? Icons.visibility_off : Icons.visibility, color: Colors.grey, size: 18),
+              )
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text("آخر راتب (يونيو)", style: TextStyle(color: Colors.grey, fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(
+            _hideSalary ? "**** د.أ" : "450.00 د.أ", 
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)
+          ),
+          const SizedBox(height: 4),
+          Text("تم الإيداع 25/06", style: TextStyle(fontSize: 10, color: Colors.green[700])),
+        ],
+      ),
+    );
+  }
+
+  // --- 5. شبكة الخدمات السريعة (Icons) ---
+  Widget _buildQuickActionsGrid() {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 4, // 4 أيقونات في الصف (أصغر)
+      childAspectRatio: 0.85,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
       children: [
-        Text(val, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-        Text("$label ($unit)", style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        _buildIconAction(Icons.assignment_add, "طلب إجازة", Colors.purple, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveRequestScreen()))),
+        _buildIconAction(Icons.timer, "مغادرة", Colors.orange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HourlyPermissionScreen()))),
+        _buildIconAction(Icons.description, "وثيقة", Colors.blue, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DocumentRequestScreen()))),
+        _buildIconAction(Icons.history, "سجلي", Colors.teal, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeeRequestsScreen()))),
+        _buildIconAction(Icons.receipt_long, "قسائم", Colors.green, () {}), // Payslip
+        _buildIconAction(Icons.calendar_month, "الحضور", Colors.redAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyAttendanceScreen()))),
+        _buildIconAction(Icons.policy, "السياسات", Colors.grey, () {}),
+        _buildIconAction(Icons.question_answer, "تواصل", Colors.indigo, () {}),
       ],
     );
   }
-}
 
-// --- شاشة فرعية: قسيمة الراتب (Payslip) ---
-class MyPayslipScreen extends StatelessWidget {
-  const MyPayslipScreen({super.key});
+  Widget _buildIconAction(IconData icon, String label, Color color, VoidCallback onTap) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 5)]),
+            child: Icon(icon, color: color, size: 24),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500), textAlign: TextAlign.center, maxLines: 1),
+      ],
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("قسائم الراتب"), backgroundColor: Colors.green),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 3,
-        itemBuilder: (context, index) {
-          return Card(
-            child: ListTile(
-              leading: const CircleAvatar(backgroundColor: Colors.green, child: Icon(Icons.attach_money, color: Colors.white)),
-              title: Text("راتب شهر ${6 - index} / 2024"),
-              subtitle: const Text("الصافي: 450.00 د.أ"),
-              trailing: const Icon(Icons.download),
-              onTap: () {
-                // فتح التفاصيل
-              },
+  // --- 6. قسم الموافقات والمهام (Workflow) ---
+  Widget _buildApprovalsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.amber[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber.shade200)),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 30),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                Text("إجراء مطلوب", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                Text("يرجى تحديث صورة الهوية الشخصية قبل 20/12", style: TextStyle(fontSize: 12, color: Colors.black54)),
+              ],
             ),
-          );
-        },
+          ),
+          const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.amber),
+        ],
       ),
     );
   }
