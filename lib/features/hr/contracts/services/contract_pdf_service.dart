@@ -1,6 +1,6 @@
 // FileName: lib/features/hr/contracts/services/contract_pdf_service.dart
-// Description: خدمة توليد ملف PDF للعقود (Fixed Type Conflict)
-// Version: 1.2
+// Description: خدمة توليد ملف PDF للعقود (Fixed Map Access)
+// Version: 1.3
 
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
@@ -12,7 +12,6 @@ import 'package:mokaab/features/hr/contracts/screens/contract_management_screen.
 
 class ContractPdfService {
   
-  // دالة الطباعة المباشرة
   static Future<void> printContract(EmploymentContract contract) async {
     final pdf = await generateContractDocument(contract);
     await Printing.layoutPdf(
@@ -21,36 +20,30 @@ class ContractPdfService {
     );
   }
 
-  // دالة بناء ملف الـ PDF
   static Future<pw.Document> generateContractDocument(EmploymentContract contract) async {
     final pdf = pw.Document();
 
-    // 1. تحميل الخطوط العربية
-    // نستخدم دالة مساعدة لجلب خطوط تدعم العربية
     final font = await PdfGoogleFonts.cairoRegular();
     final fontBold = await PdfGoogleFonts.cairoBold();
     
     final dateFormat = intl.DateFormat('yyyy/MM/dd');
 
-    // تعريف الستايلات هنا لتجنب التضارب وتمريرها للدوال
     final titleStyle = pw.TextStyle(font: fontBold, fontSize: 12, color: PdfColors.blue900);
-    final bodyStyle = pw.TextStyle(font: font, fontSize: 11, lineSpacing: 4); // زيادة التباعد للقراءة
+    final bodyStyle = pw.TextStyle(font: font, fontSize: 11, lineSpacing: 4);
     final headerStyle = pw.TextStyle(font: fontBold, fontSize: 14);
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         theme: pw.ThemeData.withFont(base: font, bold: fontBold),
-        textDirection: pw.TextDirection.rtl, // اتجاه النص من اليمين لليسار
+        textDirection: pw.TextDirection.rtl,
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // --- الترويسة ---
               _buildHeader(headerStyle, font),
               pw.SizedBox(height: 20),
               
-              // --- العنوان ---
               pw.Center(
                 child: pw.Text(
                   "عقد عمل موحد", 
@@ -59,11 +52,9 @@ class ContractPdfService {
               ),
               pw.SizedBox(height: 20),
 
-              // --- الديباجة ---
               _buildPreamble(contract, dateFormat, bodyStyle),
               pw.SizedBox(height: 20),
 
-              // --- مواد العقد ---
               _buildArticle(
                 "المادة (1): التعيين والوظيفة", 
                 "وافق الطرف الأول على تعيين الطرف الثاني في وظيفة (${_getJobTitleName(contract)}) في قسم (${_getSectionName(contract)})، ويتعهد الطرف الثاني بأداء واجباته بأمانة وإخلاص وفقاً لتعليمات إدارة الشركة.",
@@ -104,7 +95,6 @@ class ContractPdfService {
 
               pw.SizedBox(height: 40),
 
-              // --- التواقيع ---
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -144,8 +134,6 @@ class ContractPdfService {
     return pdf;
   }
 
-  // --- دوال مساعدة لبناء الـ widgets (تم تحديثها لتقبل الستايل كمعامل) ---
-
   static pw.Widget _buildHeader(pw.TextStyle headerStyle, pw.Font font) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -158,7 +146,6 @@ class ContractPdfService {
             pw.Text("سجل تجاري رقم: 123456", style: pw.TextStyle(font: font, fontSize: 10)),
           ],
         ),
-        // pw.Image(logoImage, width: 50), // مكان اللوجو
         pw.Text("Ref: HR-CONT-${DateTime.now().year}", style: const pw.TextStyle(fontSize: 10)),
       ],
     );
@@ -194,9 +181,8 @@ class ContractPdfService {
     );
   }
 
-  // --- دوال لجلب الأسماء ---
   static String _getJobTitleName(EmploymentContract c) {
-    return c.jobTitleId != null ? "مسمى: ${c.jobTitleId}" : "الموظف"; 
+    return c.jobTitleId != null ? "مسمى وظيفي: ${c.jobTitleId}" : "الموظف"; 
   }
 
   static String _getSectionName(EmploymentContract c) {
@@ -207,8 +193,11 @@ class ContractPdfService {
     return c.shiftId != null ? "وردية: ${c.shiftId}" : "الوردية الصباحية";
   }
 
+  // --- تم التصحيح هنا: استخدام allowances بدلاً من allowanceIds ---
   static String _getAllowancesText(EmploymentContract c) {
-    if (c.allowanceIds.isEmpty) return "لا يوجد";
-    return "بدلات إضافية عدد (${c.allowanceIds.length})"; 
+    if (c.allowances.isEmpty) return "لا يوجد";
+    // يمكن هنا عرض القيم: مثلاً (بدل سكن: 50، بدل مواصلات: 30)
+    // للتبسيط الآن نعرض العدد
+    return "بدلات إضافية عدد (${c.allowances.length})"; 
   }
 }

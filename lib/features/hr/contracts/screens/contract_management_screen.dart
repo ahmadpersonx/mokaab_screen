@@ -1,13 +1,13 @@
 // FileName: lib/features/hr/contracts/screens/contract_management_screen.dart
 // Description: شاشة إنشاء وإدارة عقود التعيين (The Core Linker)
-// Version: 1.3 (Fix Dropdown Value Error)
+// Version: 1.5 (Removed faulty setter)
 
 import 'package:flutter/material.dart';
 import 'package:mokaab/features/system_config/data/models/lookup_model.dart';
 import 'package:mokaab/features/system_config/data/seed_data.dart';
-import 'package:mokaab/features/hr/contracts/services/contract_pdf_service.dart'; // استيراد خدمة الطباعة
+import 'package:mokaab/features/hr/contracts/services/contract_pdf_service.dart';
 
-// نموذج مبسط للعقد (يفضل فصله لاحقاً في ملف models)
+// نموذج مبسط للعقد
 class EmploymentContract {
   String? employeeName;
   String? contractType;
@@ -18,11 +18,11 @@ class EmploymentContract {
   String? jobTitleId;
   String? jobLevelId;
   double basicSalary;
-  List<String> allowanceIds;
+  Map<String, double> allowances; // الخريطة الجديدة
   String? shiftId;
   int probationMonths;
   int noticePeriodMonths;
-  String? status; // Draft, Active, Terminated
+  String? status;
 
   EmploymentContract({
     this.employeeName,
@@ -34,12 +34,12 @@ class EmploymentContract {
     this.jobTitleId,
     this.jobLevelId,
     this.basicSalary = 0.0,
-    this.allowanceIds = const [],
+    Map<String, double>? allowances,
     this.shiftId,
     this.probationMonths = 3,
     this.noticePeriodMonths = 1,
     this.status = 'Draft',
-  });
+  }) : allowances = allowances ?? {};
 }
 
 class ContractManagementScreen extends StatefulWidget {
@@ -50,10 +50,8 @@ class ContractManagementScreen extends StatefulWidget {
 }
 
 class _ContractManagementScreenState extends State<ContractManagementScreen> {
-  // حالة العقد الحالي
   final EmploymentContract _contract = EmploymentContract();
   
-  // قوائم البيانات (من الذاكرة الحية Seed Data)
   List<LookupItem> get _departments => masterLookups[LookupCategory.departments] ?? [];
   List<LookupItem> get _sections => masterLookups[LookupCategory.sections] ?? [];
   List<LookupItem> get _jobTitles => masterLookups[LookupCategory.jobTitles] ?? [];
@@ -62,7 +60,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
   List<LookupItem> get _shifts => masterLookups[LookupCategory.shifts] ?? [];
   List<LookupItem> get _allowances => masterLookups[LookupCategory.allowanceTypes] ?? [];
 
-  // تحكم بالواجهة
   int _currentStep = 0;
   final _formKey = GlobalKey<FormState>();
 
@@ -75,7 +72,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         actions: [
           TextButton.icon(
             onPressed: () {
-              // منطق الحفظ
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم حفظ مسودة العقد بنجاح")));
             },
             icon: const Icon(Icons.save_as, color: Colors.white),
@@ -85,7 +81,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
       ),
       body: Row(
         children: [
-          // 1. القائمة الجانبية (خطوات المعالج)
           Container(
             width: 250,
             color: Colors.white,
@@ -93,7 +88,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
               type: StepperType.vertical,
               currentStep: _currentStep,
               onStepTapped: (index) => setState(() => _currentStep = index),
-              controlsBuilder: (context, details) => const SizedBox(), // إخفاء الأزرار الافتراضية
+              controlsBuilder: (context, details) => const SizedBox(),
               steps: const [
                 Step(title: Text("بيانات العقد الأساسية"), content: SizedBox(), isActive: true),
                 Step(title: Text("الموقع والهيكل الوظيفي"), content: SizedBox()),
@@ -104,8 +99,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
             ),
           ),
           const VerticalDivider(width: 1),
-          
-          // 2. محتوى النموذج
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(24),
@@ -126,8 +119,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
               ),
             ),
           ),
-          
-          // 3. لوحة الملخص (Live Summary)
           Container(
             width: 300,
             color: Colors.grey[50],
@@ -139,7 +130,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  // --- محتوى الخطوات ---
   Widget _buildStepContent() {
     switch (_currentStep) {
       case 0: return _buildBasicInfoStep();
@@ -151,7 +141,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     }
   }
 
-  // 1. الخطوة الأولى: البيانات الأساسية
   Widget _buildBasicInfoStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,17 +152,13 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
           onChanged: (val) => setState(() => _contract.employeeName = val),
         ),
         const SizedBox(height: 16),
-        
-        // --- التصحيح هنا ---
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(labelText: "نوع العقد", border: OutlineInputBorder(), prefixIcon: Icon(Icons.description)),
-          // التأكد من أن القيمة المختارة موجودة فعلياً في القائمة
           value: _contractTypes.any((e) => e.id == _contract.contractType) ? _contract.contractType : null,
           items: _contractTypes.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
           onChanged: (val) {
             setState(() {
               _contract.contractType = val;
-              // ذكاء النظام: تعبئة القيم الافتراضية من الميتا داتا
               final selected = _contractTypes.firstWhere((e) => e.id == val);
               if (selected.metaData != null) {
                 _contract.probationMonths = int.tryParse(selected.metaData!['probation'] ?? '3') ?? 3;
@@ -183,8 +168,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
           },
           validator: (value) => value == null ? 'يرجى اختيار نوع العقد' : null,
         ),
-        // --------------------
-
         const SizedBox(height: 16),
         Row(
           children: [
@@ -202,7 +185,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: TextFormField(
-                decoration: const InputDecoration(labelText: "تاريخ الانتهاء (للعقود المحددة)", border: OutlineInputBorder(), suffixIcon: Icon(Icons.event_busy)),
+                decoration: const InputDecoration(labelText: "تاريخ الانتهاء", border: OutlineInputBorder(), suffixIcon: Icon(Icons.event_busy)),
                 readOnly: true,
                 onTap: () async {
                   final date = await showDatePicker(context: context, initialDate: DateTime.now().add(const Duration(days: 365)), firstDate: DateTime(2000), lastDate: DateTime(2030));
@@ -217,7 +200,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  // 2. الخطوة الثانية: الهيكل الوظيفي
   Widget _buildJobInfoStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +215,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(labelText: "القسم", border: OutlineInputBorder()),
-          // ذكاء النظام: فلترة الأقسام بناءً على الدائرة المختارة
           value: _sections.any((e) => e.id == _contract.sectionId) ? _contract.sectionId : null,
           items: _sections
               .where((s) => _contract.departmentId == null || s.metaData?['parentId'] == _contract.departmentId)
@@ -249,11 +230,7 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
                 decoration: const InputDecoration(labelText: "المسمى الوظيفي", border: OutlineInputBorder()),
                 value: _jobTitles.any((e) => e.id == _contract.jobTitleId) ? _contract.jobTitleId : null,
                 items: _jobTitles.map((e) => DropdownMenuItem(value: e.id, child: Text(e.name))).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    _contract.jobTitleId = val;
-                  });
-                },
+                onChanged: (val) => setState(() => _contract.jobTitleId = val),
               ),
             ),
             const SizedBox(width: 16),
@@ -266,7 +243,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
                 onChanged: (val) {
                    setState(() {
                      _contract.jobLevelId = val;
-                     // ذكاء النظام: اقتراح الراتب بناءً على الحد الأدنى للدرجة
                      final level = _jobLevels.firstWhere((e) => e.id == val);
                      if (level.metaData != null && level.metaData!.containsKey('minSalary')) {
                         _contract.basicSalary = double.tryParse(level.metaData!['minSalary']) ?? 0.0;
@@ -281,7 +257,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  // 3. الخطوة الثالثة: المالية
   Widget _buildFinancialStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +266,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         TextFormField(
           decoration: const InputDecoration(labelText: "الراتب الأساسي (Basic Salary)", border: OutlineInputBorder(), suffixText: "د.أ"),
           keyboardType: TextInputType.number,
-          // عرض الراتب المقترح من الدرجة
           controller: TextEditingController(text: _contract.basicSalary > 0 ? _contract.basicSalary.toString() : ""),
           onChanged: (val) => setState(() => _contract.basicSalary = double.tryParse(val) ?? 0.0),
         ),
@@ -299,24 +273,67 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         const Text("البدلات والعلاوات (Allowances)", style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Container(
-          decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(8)),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300), 
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+          ),
           child: Column(
             children: _allowances.map((allowance) {
-              final bool isSelected = _contract.allowanceIds.contains(allowance.id);
-              return CheckboxListTile(
-                title: Text(allowance.name),
-                subtitle: Text(allowance.metaData?['type'] == 'FIXED' ? 'مبلغ ثابت' : 'نسبة مئوية'),
-                secondary: CircleAvatar(backgroundColor: allowance.color?.withOpacity(0.2), child: Icon(Icons.monetization_on, color: allowance.color, size: 20)),
-                value: isSelected,
-                onChanged: (val) {
-                  setState(() {
-                    if (val == true) {
-                      _contract.allowanceIds.add(allowance.id);
-                    } else {
-                      _contract.allowanceIds.remove(allowance.id);
-                    }
-                  });
-                },
+              final bool isSelected = _contract.allowances.containsKey(allowance.id);
+              final TextEditingController valController = TextEditingController(
+                text: isSelected ? _contract.allowances[allowance.id].toString() : ""
+              );
+
+              return Column(
+                children: [
+                  CheckboxListTile(
+                    title: Text(allowance.name, style: const TextStyle(fontSize: 14)),
+                    subtitle: Text(allowance.metaData?['type'] == 'FIXED' ? 'مبلغ ثابت' : 'نسبة مئوية من الأساسي', style: const TextStyle(fontSize: 11)),
+                    secondary: CircleAvatar(backgroundColor: allowance.color?.withOpacity(0.1), child: Icon(Icons.monetization_on, color: allowance.color, size: 18)),
+                    value: isSelected,
+                    onChanged: (val) {
+                      setState(() {
+                        if (val == true) {
+                          _contract.allowances[allowance.id] = 0.0;
+                        } else {
+                          _contract.allowances.remove(allowance.id);
+                        }
+                      });
+                    },
+                  ),
+                  if (isSelected)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 72, 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: valController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: allowance.metaData?['type'] == 'FIXED' ? "القيمة (د.أ)" : "النسبة (%)",
+                                isDense: true,
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _contract.allowances[allowance.id] = double.tryParse(value) ?? 0.0;
+                                });
+                              },
+                            ),
+                          ),
+                          if (allowance.metaData?['type'] == 'PERCENT')
+                             Padding(
+                               padding: const EdgeInsets.only(right: 8.0),
+                               child: Text("= ${(_contract.basicSalary * (_contract.allowances[allowance.id] ?? 0) / 100).toStringAsFixed(1)} د.أ", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                             ),
+                        ],
+                      ),
+                    ),
+                  const Divider(height: 1),
+                ],
               );
             }).toList(),
           ),
@@ -325,7 +342,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  // 4. الخطوة الرابعة: الدوام
   Widget _buildAttendanceStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +364,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  // 5. الخطوة الخامسة: الشروط
   Widget _buildTermsStep() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,27 +392,25 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        SwitchListTile(
-          title: const Text("خاضع للضمان الاجتماعي"),
-          value: true, 
-          onChanged: (val) {},
-        ),
-        SwitchListTile(
-          title: const Text("تأمين صحي"),
-          value: true, 
-          onChanged: (val) {},
-        ),
+        SwitchListTile(title: const Text("خاضع للضمان الاجتماعي"), value: true, onChanged: (val) {}),
+        SwitchListTile(title: const Text("تأمين صحي"), value: true, onChanged: (val) {}),
       ],
     );
   }
 
-  // --- لوحة الملخص الجانبية (Smart Summary) ---
   Widget _buildContractSummary() {
     double totalSalary = _contract.basicSalary;
     double totalAllowances = 0; 
-    for (var id in _contract.allowanceIds) {
-      totalAllowances += 50; 
-    }
+
+    _contract.allowances.forEach((id, value) {
+      final allowance = _allowances.firstWhere((e) => e.id == id, orElse: () => LookupItem(id: '', name: '', code: ''));
+      if (allowance.metaData?['type'] == 'PERCENT') {
+        totalAllowances += (_contract.basicSalary * value / 100);
+      } else {
+        totalAllowances += value;
+      }
+    });
+
     double grandTotal = totalSalary + totalAllowances;
 
     return Column(
@@ -411,10 +424,25 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
         const Divider(),
         const Text("الملخص المالي (الشهري)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)),
         const SizedBox(height: 10),
-        _summaryRow("الأساسي:", "${_contract.basicSalary} د.أ"),
-        _summaryRow("مجموع البدلات:", "$totalAllowances د.أ"),
+        _summaryRow("الأساسي:", "${_contract.basicSalary.toStringAsFixed(0)} د.أ"),
+        
+        if (_contract.allowances.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          const Text("البدلات:", style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ..._contract.allowances.entries.map((entry) {
+             final allowance = _allowances.firstWhere((e) => e.id == entry.key);
+             double val = entry.value;
+             if (allowance.metaData?['type'] == 'PERCENT') val = (_contract.basicSalary * val / 100);
+             return Padding(
+               padding: const EdgeInsets.only(right: 8.0),
+               child: _summaryRow("- ${allowance.name}", "${val.toStringAsFixed(0)} د.أ", fontSize: 11),
+             );
+          }).toList(),
+        ],
+
+        _summaryRow("مجموع البدلات:", "${totalAllowances.toStringAsFixed(0)} د.أ"),
         const Divider(thickness: 2),
-        _summaryRow("الإجمالي:", "$grandTotal د.أ", isBold: true, color: Colors.green[800]),
+        _summaryRow("الإجمالي:", "${grandTotal.toStringAsFixed(0)} د.أ", isBold: true, color: Colors.green[800]),
         const Spacer(),
         if (_contract.contractType != null)
            Container(
@@ -430,14 +458,14 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool isBold = false, Color? color}) {
+  Widget _summaryRow(String label, String value, {bool isBold = false, Color? color, double fontSize = 14}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey)),
-          Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color ?? Colors.black, fontSize: isBold ? 16 : 14)),
+          Text(label, style: TextStyle(color: Colors.grey[700], fontSize: fontSize)),
+          Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color ?? Colors.black, fontSize: isBold ? 16 : fontSize)),
         ],
       ),
     );
@@ -481,7 +509,6 @@ class _ContractManagementScreenState extends State<ContractManagementScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("تم حفظ العقد وجاري إنشاء ملف PDF..."))
     );
-
     try {
       await ContractPdfService.printContract(_contract);
     } catch (e) {
