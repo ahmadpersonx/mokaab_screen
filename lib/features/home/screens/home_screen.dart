@@ -1,6 +1,7 @@
 // FileName: lib/features/home/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:mokaab/features/hr/presentation/screens/hr_dashboard_screen.dart'; // استيراد الشاشة الجديدة
+import 'package:mokaab/features/hr/presentation/screens/employee/employee_requests_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -52,7 +53,15 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(context, MaterialPageRoute(builder: (_) => const HrDashboardScreen()));
                       },
                     ),
-
+// زر "طلباتي" (الجديد)
+     _buildCompactCard(
+                      context,
+                      title: "طلباتي (Self Service)",
+                      icon: Icons.assignment_ind, // <<--- التعديل هنا (assignment_ind بدلاً من assignment_user)
+                      color: Colors.blueAccent,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeeRequestsScreen())),
+                    ),
+                    
                     // --- باقي الأقسام (محاكاة) ---
                     _buildCompactCard(context, title: "الإدارة المالية", icon: Icons.account_balance_wallet, color: Colors.green, onTap: () {}),
                     _buildCompactCard(context, title: "المبيعات والعملاء", icon: Icons.shopping_cart, color: Colors.blue, onTap: () {}),
