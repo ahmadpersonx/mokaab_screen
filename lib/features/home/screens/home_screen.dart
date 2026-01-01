@@ -7,7 +7,7 @@ import 'package:mokaab/features/hr/presentation/screens/hr_dashboard_screen.dart
 import 'package:mokaab/features/hr/presentation/screens/employee/employee_portal_screen.dart';
 import 'package:mokaab/features/hr/workflow/screens/pending_approvals_screen.dart';
 import 'package:mokaab/features/finance/presentation/screens/financial_management_screen.dart';
-
+import 'package:mokaab/features/supply_chain/supply_chain_settings_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -81,6 +81,17 @@ class HomeScreen extends StatelessWidget {
                       icon: Icons.account_circle,
                       color: Colors.blue,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmployeePortalScreen())),
+                    ),
+
+_buildCompactCard(
+                      context,
+                      title: "سلسلة الإمداد",
+                      icon: Icons.local_shipping, // أيقونة معبرة عن الشحن والحركة
+                      color: const Color(0xFF0D47A1), // الأزرق الغامق (نفس لون شاشة الإعدادات)
+                      onTap: () {
+                        // الانتقال لشاشة إعدادات سلسلة الإمداد
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => const SupplyChainSettingsScreen()));
+                      },
                     ),
 
                     // --- 4. الإدارة المالية (تم الربط) ---

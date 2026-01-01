@@ -325,7 +325,7 @@ class _EmployeePortalScreenState extends State<EmployeePortalScreen> {
       {'icon': Icons.timer, 'label': 'مغادرة', 'color': Colors.orange, 'page': const HourlyPermissionScreen()},
       {'icon': Icons.description, 'label': 'وثيقة', 'color': Colors.blue, 'page': const DocumentRequestScreen()},
       {'icon': Icons.assignment, 'label': 'طلباتي', 'color': Colors.teal, 'page': const EmployeeRequestsScreen()},
-      
+      {'icon': Icons.add_shopping_cart, 'label': 'طلب مواد', 'color': Colors.deepOrange, },
       // --- تفعيل الروابط هنا ---
       {'icon': Icons.receipt_long, 'label': 'قسائم', 'color': Colors.green, 'page': const MyPayslipScreen()},
       {'icon': Icons.fingerprint, 'label': 'سجل الدوام', 'color': Colors.redAccent, 'page': const MyAttendanceScreen()},
