@@ -6,6 +6,7 @@ import 'package:mokaab/features/supply_chain/data/supply_chain_config_data.dart'
 import 'package:mokaab/features/supply_chain/screens/warehouse_management_screen.dart';
 import 'package:mokaab/features/supply_chain/screens/fleet_management_screen.dart';
 import 'package:mokaab/features/supply_chain/screens/geo_location_management_screen.dart';
+ import 'package:mokaab/features/supply_chain/screens/uom_management_screen.dart';
 
 class SupplyChainSettingsScreen extends StatefulWidget {
   const SupplyChainSettingsScreen({super.key});
@@ -102,6 +103,9 @@ class _SupplyChainSettingsScreenState extends State<SupplyChainSettingsScreen> {
       case SupplyChainConfigData.idLocations:
         return const GeoLocationManagementScreen(); // تمت إزالة const لتجنب الأخطاء
         
+case SupplyChainConfigData.idUom:
+        return const UomManagementScreen(); // تم الربط
+
       default:
         return Center(
           child: Column(

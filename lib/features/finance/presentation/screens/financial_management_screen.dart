@@ -1,5 +1,9 @@
 // FileName: lib/features/finance/presentation/screens/financial_management_screen.dart
 import 'package:flutter/material.dart';
+import 'package:mokaab/features/finance/presentation/screens/chart_of_accounts_screen.dart';
+import 'package:mokaab/features/finance/presentation/screens/sales_invoice_screen.dart'; // 1. استيراد شاشة الفاتورة
+import 'package:mokaab/features/finance/presentation/screens/journal_entries_screen.dart';
+import 'package:mokaab/features/finance/presentation/screens/payment_receipt_screen.dart';
 
 class FinancialManagementScreen extends StatelessWidget {
   const FinancialManagementScreen({super.key});
@@ -7,11 +11,11 @@ class FinancialManagementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // نفس لون خلفية النظام
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text("الإدارة المالية"),
         centerTitle: true,
-        backgroundColor: Colors.teal[800], // لون مميز للمالية
+        backgroundColor: Colors.teal[800],
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -23,10 +27,8 @@ class FinancialManagementScreen extends StatelessWidget {
             _buildHeader(),
             const SizedBox(height: 24),
             
-            // الشبكة المتجاوبة
             LayoutBuilder(
               builder: (context, constraints) {
-                // تحديد عدد الأعمدة (Responsive)
                 int crossAxisCount = 2;
                 if (constraints.maxWidth > 1200) crossAxisCount = 5;
                 else if (constraints.maxWidth > 800) crossAxisCount = 4;
@@ -38,21 +40,45 @@ class FinancialManagementScreen extends StatelessWidget {
                   crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 1.0, // بطاقات مربعة
+                  childAspectRatio: 1.0,
                   children: [
-                    // العمليات اليومية
-                    _buildFinanceCard("فاتورة مبيعات", Icons.point_of_sale, Colors.blue, () {}),
+                    // --- 2. تفعيل زر فاتورة المبيعات ---
+                    _buildFinanceCard(
+                      "فاتورة مبيعات", 
+                      Icons.point_of_sale, 
+                      Colors.blue, 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesInvoiceScreen()))
+                    ),
+
                     _buildFinanceCard("فاتورة مشتريات", Icons.shopping_cart, Colors.orange, () {}),
-                    _buildFinanceCard("سندات القبض", Icons.download_rounded, Colors.green, () {}),
+_buildFinanceCard(
+  "سندات القبض", 
+  Icons.download_rounded, 
+  Colors.green, 
+  () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PaymentReceiptScreen()))
+),
                     _buildFinanceCard("سندات الصرف", Icons.upload_rounded, Colors.redAccent, () {}),
                     
-                    // العمليات المحاسبية
-                    _buildFinanceCard("اليومية العامة", Icons.library_books, Colors.indigo, () {}),
+// زر اليومية العامة (تم الربط)
+                    _buildFinanceCard(
+                      "اليومية العامة", 
+                      Icons.library_books, 
+                      Colors.indigo, 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalEntriesScreen()))
+                    ),
+                    
                     _buildFinanceCard("إدارة الشيكات", Icons.payments, Colors.teal, () {}),
                     
-                    // الهيكل والتقارير
                     _buildFinanceCard("مراكز التكلفة", Icons.hub, Colors.brown, () {}),
-                    _buildFinanceCard("دليل الحسابات", Icons.menu_book, Colors.blueGrey, () {}),
+                    
+                    // زر دليل الحسابات (مفعل سابقاً)
+                    _buildFinanceCard(
+                      "دليل الحسابات", 
+                      Icons.menu_book, 
+                      Colors.blueGrey, 
+                      () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChartOfAccountsScreen()))
+                    ),
+                    
                     _buildFinanceCard("التقارير المالية", Icons.pie_chart, Colors.purple, () {}),
                   ],
                 );
@@ -64,7 +90,6 @@ class FinancialManagementScreen extends StatelessWidget {
     );
   }
 
-  // --- ترويسة الصفحة ---
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -93,7 +118,6 @@ class FinancialManagementScreen extends StatelessWidget {
     );
   }
 
-  // --- تصميم البطاقة المحسن (Unified Card Style) ---
   Widget _buildFinanceCard(String title, IconData icon, Color color, VoidCallback onTap) {
     return Material(
       color: Colors.white,

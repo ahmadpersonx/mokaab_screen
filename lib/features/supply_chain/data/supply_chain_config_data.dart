@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:mokaab/features/supply_chain/models/warehouse_model.dart';
 import 'package:mokaab/features/supply_chain/models/fleet_model.dart';
 import 'package:mokaab/features/supply_chain/models/geo_location_model.dart';
+import 'package:mokaab/features/supply_chain/models/uom_model.dart'; // إضافة الاستيراد
 
 class SupplyChainConfigData {
   // --- 1. المعرفات (IDs) ---
@@ -135,4 +136,80 @@ class SupplyChainConfigData {
       costCenterId: 'CC-PRJ-ABD', managerName: 'مهندس الموقع',
     ),
   ];
+
+  // 6. بيانات وحدات القياس (UoM Seed Data)
+  static final List<UnitOfMeasure> uoms = [
+    // --- فئة الوزن (المرجع: كغم) ---
+    UnitOfMeasure(
+      id: 'WEIGHT_KG', name: 'كيلوغرام', code: 'kg', 
+      category: UomCategory.weight, type: UomType.reference, ratio: 1.0, 
+      uneceCode: 'KGM', roundingPrecision: 3
+    ),
+    UnitOfMeasure(
+      id: 'WEIGHT_TON', name: 'طن', code: 'ton', 
+      category: UomCategory.weight, type: UomType.bigger, ratio: 1000.0, 
+      uneceCode: 'TNE',
+    ),
+    
+    // --- فئة العدد (المرجع: حبة) ---
+    UnitOfMeasure(
+      id: 'UNIT_PCS', name: 'حبة / قطعة', code: 'pcs', 
+      category: UomCategory.unit, type: UomType.reference, ratio: 1.0, 
+      uneceCode: 'C62', roundingPrecision: 0
+    ),
+    UnitOfMeasure(
+      id: 'UNIT_DOZEN', name: 'دزينة (12)', code: 'doz', 
+      category: UomCategory.unit, type: UomType.bigger, ratio: 12.0, 
+      uneceCode: 'DZN',
+    ),
+    UnitOfMeasure(
+      id: 'UNIT_PALLET', name: 'طبلية (تقديري)', code: 'plt', 
+      category: UomCategory.unit, type: UomType.bigger, ratio: 50.0, // افتراضي ويعدل
+      uneceCode: 'PX',
+    ),
+
+    // --- فئة المساحة (المرجع: متر مربع) - هام جداً للحجر ---
+    UnitOfMeasure(
+      id: 'AREA_M2', name: 'متر مربع', code: 'm²', 
+      category: UomCategory.area, type: UomType.reference, ratio: 1.0, 
+      uneceCode: 'MTK', roundingPrecision: 4
+    ),
+
+    // --- فئة الطول (المرجع: متر) - للكرانيش والقص ---
+    UnitOfMeasure(
+      id: 'LEN_M', name: 'متر طولي', code: 'm', 
+      category: UomCategory.length, type: UomType.reference, ratio: 1.0, 
+      uneceCode: 'MTR',
+    ),
+    UnitOfMeasure(
+      id: 'LEN_CM', name: 'سنتيمتر', code: 'cm', 
+      category: UomCategory.length, type: UomType.smaller, ratio: 0.01, 
+      uneceCode: 'CMT',
+    ),
+
+    // --- فئة الحجم (المرجع: لتر) - للكيماويات والديزل ---
+    UnitOfMeasure(
+      id: 'VOL_L', name: 'لتر', code: 'L', 
+      category: UomCategory.volume, type: UomType.reference, ratio: 1.0, 
+      uneceCode: 'LTR',
+    ),
+    UnitOfMeasure(
+      id: 'VOL_M3', name: 'متر مكعب', code: 'm³', 
+      category: UomCategory.volume, type: UomType.bigger, ratio: 1000.0, // 1m3 = 1000L
+      uneceCode: 'MTQ',
+    ),
+    
+    // --- فئة الوقت (المرجع: ساعة) - للآليات والعمالة ---
+    UnitOfMeasure(
+      id: 'TIME_HR', name: 'ساعة عمل', code: 'hr', 
+      category: UomCategory.time, type: UomType.reference, ratio: 1.0, 
+      uneceCode: 'HUR',
+    ),
+    UnitOfMeasure(
+      id: 'TIME_DAY', name: 'يوم عمل', code: 'day', 
+      category: UomCategory.time, type: UomType.bigger, ratio: 8.0, // دوام 8 ساعات
+      uneceCode: 'DAY',
+    ),
+  ];
+  
 }
